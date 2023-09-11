@@ -1,10 +1,10 @@
-set(demo_src demo_cls_c_api_images.cpp)
+set(demo_src demo_det_images.cpp)
 get_filename_component(exe_name ${demo_src} NAME_WLE)
 
 add_executable(${exe_name} ${demo_src})
 target_include_directories(${exe_name} PRIVATE
+        ${PROJECT_SOURCE_DIR}
         ${PROJECT_SOURCE_DIR}/common
-        ${PROJECT_SOURCE_DIR}/cls
         )
 
 target_compile_options(${exe_name} PRIVATE
@@ -23,11 +23,11 @@ target_link_options(${exe_name} PRIVATE
 
 if(BUILD_SHARED_LIBS)
     target_link_libraries(${exe_name} PRIVATE
-            ${CLS_LIB_NAME}
+            ${DET_LIB_NAME}
             )
 else()
     target_link_libraries(${exe_name} PRIVATE
-            -Wl,--whole-archive ${CLS_LIB_NAME} -Wl,--no-whole-archive
+            -Wl,--whole-archive ${DET_LIB_NAME} -Wl,--no-whole-archive
             )
     target_link_options(${exe_name} PRIVATE
             -Wl,--allow-multiple-definition
@@ -36,5 +36,11 @@ endif()
 
 target_link_libraries(${exe_name} PRIVATE
         rknnrt
-        ${OpenCV_LIBS}
+#        ${OpenCV_LIBS}
+        mpp
+        opencv_java4
 )
+
+if(USE_RGA)
+    target_link_libraries(${exe_name} PRIVATE rga)
+endif()

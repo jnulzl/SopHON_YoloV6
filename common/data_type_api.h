@@ -44,12 +44,13 @@ typedef struct box_info_tag_c
     float y2;
     float score;
     int label;
+    int frame_id;
 } box_info_tag_c;
 
 typedef struct cls_info_tag_c
 {
-    int label;
     float score;
+    int label;
     int frame_id;
 } cls_info_tag_c;
 

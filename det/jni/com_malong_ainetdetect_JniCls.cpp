@@ -22,16 +22,18 @@ static std::mutex io_mutex;
 #define LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE,    TAG, __VA_ARGS__)
 
 
-static void Yuv2Rgb(int width, int height, const uint8_t* y_buffer, const uint8_t* u_buffer,
-                    const uint8_t* v_buffer, int y_pixel_stride, int uv_pixel_stride,
-                    int y_row_stride, int uv_row_stride, int* argb_output)
+static void Yuv2Rgb(int width, int height, const uint8_t *y_buffer, const uint8_t *u_buffer,
+                    const uint8_t *v_buffer, int y_pixel_stride, int uv_pixel_stride,
+                    int y_row_stride, int uv_row_stride, int *argb_output)
 {
     uint32_t a = (255u << 24);
     uint8_t r, g, b;
     int16_t y_val, u_val, v_val;
 
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
+    for (int y = 0; y < height; ++y)
+    {
+        for (int x = 0; x < width; ++x)
+        {
             // Y plane should have positive values belonging to [0...255]
             int y_idx = (y * y_row_stride) + (x * y_pixel_stride);
             y_val = static_cast<int16_t>(y_buffer[y_idx]);
@@ -40,7 +42,7 @@ static void Yuv2Rgb(int width, int height, const uint8_t* y_buffer, const uint8_
             int uvy = y / 2;
             // U/V Values are sub-sampled i.e. each pixel in U/V channel in a
             // YUV_420 image act as chroma value for 4 neighbouring pixels
-            int uv_idx = (uvy * uv_row_stride) +  (uvx * uv_pixel_stride);
+            int uv_idx = (uvy * uv_row_stride) + (uvx * uv_pixel_stride);
 
             u_val = static_cast<int16_t>(u_buffer[uv_idx]) - 128;
             v_val = static_cast<int16_t>(v_buffer[uv_idx]) - 128;
@@ -80,7 +82,10 @@ static void BitmapToMat2(JNIEnv *env, jobject &bitmap, cv::Mat &dst, jboolean ne
             if (needUnPremultiplyAlpha)
             {
                 cv::cvtColor(tmp, dst, cv::COLOR_RGBA2BGR);
-            } else tmp.copyTo(dst);
+            } else
+            {
+                tmp.copyTo(dst);
+            }
         } else
         {
             // info.format == ANDROID_BITMAP_FORMAT_RGB_565
@@ -159,7 +164,7 @@ JNIEXPORT void JNICALL Java_com_malong_ainetdetect_JniCls_init(JNIEnv *env, jobj
     ANY_POINTER_CAST(cls_ptr_, CModule_cls)->init(baseConfig);
 
     // Get a reference to this object's class
-    jclass selfClass = env->GetObjectClass( self);
+    jclass selfClass = env->GetObjectClass(self);
     // long
     // Get the Field ID of the instance variables "handle"
     jfieldID fidHandle = env->GetFieldID(selfClass, "handle", "J");
@@ -182,7 +187,7 @@ JNIEXPORT void JNICALL Java_com_malong_ainetdetect_JniCls_destory(JNIEnv *env, j
     std::lock_guard<std::mutex> lk(io_mutex);
 
     // Get a reference to this object's class
-    jclass selfClass = env->GetObjectClass( self);
+    jclass selfClass = env->GetObjectClass(self);
     // long
     // Get the Field ID of the instance variables "handle"
     jfieldID fidHandle = env->GetFieldID(selfClass, "handle", "J");
@@ -201,11 +206,11 @@ JNIEXPORT void JNICALL Java_com_malong_ainetdetect_JniCls_destory(JNIEnv *env, j
  * Method:    alg_cls_run
  * Signature: (Landroid/graphics/Bitmap;)V
  */
-JNIEXPORT void JNICALL Java_com_malong_ainetdetect_JniCls_run(JNIEnv* env, jobject self, jobject bitmap)
+JNIEXPORT void JNICALL Java_com_malong_ainetdetect_JniCls_run(JNIEnv *env, jobject self, jobject bitmap)
 {
     std::lock_guard<std::mutex> lk(io_mutex);
     // Get a reference to this object's class
-    jclass selfClass = env->GetObjectClass( self);
+    jclass selfClass = env->GetObjectClass(self);
     // long
     // Get the Field ID of the instance variables "handle"
     jfieldID fidHandle = env->GetFieldID(selfClass, "handle", "J");
@@ -214,7 +219,7 @@ JNIEXPORT void JNICALL Java_com_malong_ainetdetect_JniCls_run(JNIEnv* env, jobje
 
     cv::Mat img;
     LOGD("BitmapToMat begin ......");
-    BitmapToMat(env, bitmap,img);
+    BitmapToMat(env, bitmap, img);
     LOGD("BitmapToMat end and  process ......");
     ANY_POINTER_CAST(handle, CModule_cls)->process(img);
     LOGD("process end!");
@@ -232,14 +237,14 @@ JNIEXPORT jobject JNICALL Java_com_malong_ainetdetect_JniCls_get(JNIEnv *env, jo
 {
     std::lock_guard<std::mutex> lk(io_mutex);
     // Get a reference to this object's class
-    jclass selfClass = env->GetObjectClass( self);
+    jclass selfClass = env->GetObjectClass(self);
     // long
     // Get the Field ID of the instance variables "handle"
     jfieldID fidHandle = env->GetFieldID(selfClass, "handle", "J");
     // Get the long given the Field ID
     jlong handle = env->GetLongField(self, fidHandle);
 
-    const ClsInfo& cls_info = ANY_POINTER_CAST(handle, CModule_cls)->get_result();
+    const ClsInfo &cls_info = ANY_POINTER_CAST(handle, CModule_cls)->get_result();
 
     // Get a class reference for java.lang.Integer
     jclass cls = env->FindClass("com/malong/ainetdetect/ClsInfo");
@@ -253,31 +258,33 @@ JNIEXPORT jobject JNICALL Java_com_malong_ainetdetect_JniCls_get(JNIEnv *env, jo
     return newObj;
 }
 
-JNIEXPORT jboolean JNICALL Java_com_malong_ainetdetect_YuvConvertor_yuv420toArgbNative(JNIEnv *env, jclass clazz, jint width,
-                                                                        jint height, jobject y_byte_buffer,
-                                                                        jobject u_byte_buffer,
-                                                                        jobject v_byte_buffer,
-                                                                        jint y_pixel_stride,
-                                                                        jint uv_pixel_stride, jint y_row_stride,
-                                                                        jint uv_row_stride,
-                                                                        jintArray argb_array)
+JNIEXPORT jboolean JNICALL
+Java_com_malong_ainetdetect_YuvConvertor_yuv420toArgbNative(JNIEnv *env, jclass clazz, jint width,
+                                                            jint height, jobject y_byte_buffer,
+                                                            jobject u_byte_buffer,
+                                                            jobject v_byte_buffer,
+                                                            jint y_pixel_stride,
+                                                            jint uv_pixel_stride, jint y_row_stride,
+                                                            jint uv_row_stride,
+                                                            jintArray argb_array)
 {
-        auto y_buffer = reinterpret_cast<uint8_t*>(env->GetDirectBufferAddress(y_byte_buffer));
-        auto u_buffer = reinterpret_cast<uint8_t*>(env->GetDirectBufferAddress(u_byte_buffer));
-        auto v_buffer = reinterpret_cast<uint8_t*>(env->GetDirectBufferAddress(v_byte_buffer));
-        jint* argb_result_array = env->GetIntArrayElements(argb_array, nullptr);
-        if (argb_result_array == nullptr || y_buffer == nullptr || u_buffer == nullptr
-        || v_buffer == nullptr) {
-            LOGE("[yuv420toArgbNative] One or more inputs are null.");
-            return false;
-        }
+    auto y_buffer = reinterpret_cast<uint8_t *>(env->GetDirectBufferAddress(y_byte_buffer));
+    auto u_buffer = reinterpret_cast<uint8_t *>(env->GetDirectBufferAddress(u_byte_buffer));
+    auto v_buffer = reinterpret_cast<uint8_t *>(env->GetDirectBufferAddress(v_byte_buffer));
+    jint *argb_result_array = env->GetIntArrayElements(argb_array, nullptr);
+    if (argb_result_array == nullptr || y_buffer == nullptr || u_buffer == nullptr
+        || v_buffer == nullptr)
+    {
+        LOGE("[yuv420toArgbNative] One or more inputs are null.");
+        return false;
+    }
 
-        Yuv2Rgb(width, height, reinterpret_cast<const uint8_t*>(y_buffer),
-        reinterpret_cast<const uint8_t*>(u_buffer),
-        reinterpret_cast<const uint8_t*>(v_buffer),
-                y_pixel_stride, uv_pixel_stride, y_row_stride, uv_row_stride,
-                argb_result_array);
-        return true;
+    Yuv2Rgb(width, height, reinterpret_cast<const uint8_t *>(y_buffer),
+            reinterpret_cast<const uint8_t *>(u_buffer),
+            reinterpret_cast<const uint8_t *>(v_buffer),
+            y_pixel_stride, uv_pixel_stride, y_row_stride, uv_row_stride,
+            argb_result_array);
+    return true;
 }
 
 

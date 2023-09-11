@@ -32,28 +32,41 @@ struct BaseConfig
     int device_id = 0;
 #ifdef USE_TENSORRT
     int dlaCore = -1;
-    bool fp16 = false;
+    bool fp16 = true;
     bool int8 = false;
 #endif
 #endif
     int model_include_preprocess = 0;
 };
 
-struct YoloConfig : public BaseConfig {
+struct YoloConfig : public BaseConfig
+{
+    int num_cls = 1;
     float conf_thres;
     float nms_thresh;
     std::vector<int> strides;
     std::vector<std::vector<float>> anchor_grids;
 };
 
-typedef struct {
+
+typedef struct
+{
     float x1;
     float y1;
     float x2;
     float y2;
     float score;
+    float area;
     int label;
 } BoxInfo;
+
+typedef struct
+{
+    BoxInfo *boxes;
+    int size;
+    int capacity;
+    int frame_id;
+} BoxInfos;
 
 typedef struct
 {
@@ -62,15 +75,32 @@ typedef struct
     int frame_id;
 } ClsInfo;
 
-typedef enum:int
+typedef struct
+{
+    ClsInfo *boxes;
+    int size;
+    int capacity;
+    int frame_id;
+} ClsInfos;
+
+typedef struct
+{
+    uint8_t *cls;
+    float *probs;
+    int height;
+    int width;
+    char reserve[8];
+} SegmentResult;
+
+typedef enum : int
 {
     IMG_BGR = 0,
     IMG_RGB = 1,
-    IMG_GRAY = 2,
-    IMG_BGRA32 = 3,
-}InputDataType;
+    IMG_GRAY = 2
+} InputDataType;
 
-template <typename DATATYPE>
+
+template<typename DATATYPE>
 struct _Rect
 {
     DATATYPE xmin;
@@ -84,18 +114,52 @@ struct _Rect
 typedef _Rect<float> RectFloat;
 typedef _Rect<int> RectInt;
 
-template <typename DATATYPE>
+template<typename DATATYPE>
 struct _Point
 {
     DATATYPE x;
     DATATYPE y;
+    float score;
 };
 typedef _Point<float> PointFloat;
 typedef _Point<int> PointInt;
 
+typedef struct
+{
+    PointFloat *points;
+    int size;
+    int capacity;
+    int frame_id;
+} PointFloats;
 
 
-#define PI (3.141592653589793)
+typedef struct
+{
+    RectFloat rect;
+    int id;
+    char reserve[8];
+} RectWithID;
 
+template<typename DATATYPE>
+struct _ImageInfo
+{
+    DATATYPE *data = nullptr;
+    int img_height = 0;
+    int img_width = 0;
+    int is_device_data = 0;
+    int stride = 0;
+    int frame_id = 0;
+    InputDataType img_data_type = InputDataType::IMG_BGR;
+    char reserve[8];
+};
+typedef _ImageInfo<uint8_t> ImageInfoUint8;
+typedef _ImageInfo<float> ImageInfoFloat32;
 
+typedef struct
+{
+    int frame_id;
+    int attribute;
+    PointFloat pointFloat[4];
+    char reserve[8];
+} frame_attribute_t;
 #endif //ALG_DATA_TYPE_H
