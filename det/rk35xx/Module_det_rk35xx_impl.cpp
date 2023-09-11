@@ -130,17 +130,17 @@ static void getTopKBoxesFromFloatOutput(const float* boxes, const float* indexs,
 }
 #endif
 
-CModule_det_rk356x_impl::CModule_det_rk356x_impl()
+CModule_det_rk35xx_impl::CModule_det_rk35xx_impl()
 {
 
 }
 
-CModule_det_rk356x_impl::~CModule_det_rk356x_impl()
+CModule_det_rk35xx_impl::~CModule_det_rk35xx_impl()
 {
 
 }
 
-void CModule_det_rk356x_impl::engine_deinit()
+void CModule_det_rk35xx_impl::engine_deinit()
 {
 #ifdef ALG_DEBUG
     AIALG_PRINT("release success begin\n");
@@ -168,7 +168,7 @@ void CModule_det_rk356x_impl::engine_deinit()
 #endif
 }
 
-void CModule_det_rk356x_impl::engine_init()
+void CModule_det_rk35xx_impl::engine_init()
 {
     // init rga context
     memset(&src_rect_, 0, sizeof(src_rect_));
@@ -283,7 +283,7 @@ void CModule_det_rk356x_impl::engine_init()
     }
 }
 
-void CModule_det_rk356x_impl::pre_process(const ImageInfoUint8& imageInfo)
+void CModule_det_rk35xx_impl::pre_process(const ImageInfoUint8& imageInfo)
 {
     CModule_det_impl::pre_process(imageInfo);
 
@@ -334,7 +334,7 @@ void CModule_det_rk356x_impl::pre_process(const ImageInfoUint8& imageInfo)
 #endif
 }
 
-void CModule_det_rk356x_impl::engine_run()
+void CModule_det_rk35xx_impl::engine_run()
 {
 #ifdef ALG_DEBUG
     std::chrono::time_point<std::chrono::system_clock> begin_time = std::chrono::system_clock::now();

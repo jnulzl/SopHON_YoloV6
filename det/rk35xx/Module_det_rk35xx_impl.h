@@ -12,11 +12,11 @@
 #define ALIGN 8
 #define DET_USE_FLOAT_OUTPUT
 
-class CModule_det_rk356x_impl : public CModule_det_impl
+class CModule_det_rk35xx_impl : public CModule_det_impl
 {
 public:
-    CModule_det_rk356x_impl();
-    virtual ~CModule_det_rk356x_impl();
+    CModule_det_rk35xx_impl();
+    virtual ~CModule_det_rk35xx_impl();
 
 private:
     virtual void engine_init() override;

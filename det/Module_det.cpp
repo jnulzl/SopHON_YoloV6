@@ -7,7 +7,7 @@
 
 CModule_det::CModule_det()
 {
-    impl_ = new CModule_det_rk356x_impl();
+    impl_ = new CModule_det_rk35xx_impl();
 }
 
 CModule_det::~CModule_det()
