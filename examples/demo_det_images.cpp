@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
     int input_size = std::atoi(argv[2]);
 
     /*******************det_obj******************/
-    CModule_det det_obj;
+    rk35xx_det::CModule_det det_obj;
     config_tmp.input_names = input_names;
     config_tmp.output_names = output_names;
     config_tmp.weights_path = weights_path;
@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
         image_Info_Uint8.img_data_type = InputDataType::IMG_BGR;
 
         std::chrono::time_point<std::chrono::system_clock> startTP = std::chrono::system_clock::now();
-        det_obj.process(&image_Info_Uint8, 1);
+        det_obj.process_batch(&image_Info_Uint8, 1);
         std::chrono::time_point<std::chrono::system_clock> finishTP1 = std::chrono::system_clock::now();
         std::cout << "frame_id:" << frame_id << " Using RK356X all time = " << std::chrono::duration_cast<std::chrono::milliseconds>(finishTP1 - startTP).count() << " ms" << std::endl;
 

@@ -4,29 +4,29 @@
 #include <string>
 #include <vector>
 
-#include <opencv2/core.hpp>
-
 #include "data_type.h"
 #include "alg_define.h"
 
-class AIALG_PUBLIC CModule_det
+namespace rk35xx_det
 {
-public:
-	CModule_det();
+    class AIALG_PUBLIC CModule_det
+    {
+    public:
+        CModule_det();
 
-	~CModule_det();
+        ~CModule_det();
 
-	void init(const YoloConfig& config);
+        void init(const YoloConfig &config);
 
-    void deinit();
+        void deinit();
 
-    void process(const ImageInfoUint8 *imageInfos, int batch_size);
+        void process_batch(const ImageInfoUint8 *imageInfos, int batch_size);
 
-    const BoxInfos* get_result();
+        const BoxInfos *get_result();
 
-private:
-	AW_ANY_POINTER impl_;
-};
-
+    private:
+        AW_ANY_POINTER impl_;
+    };
+}
 #endif // MODULE_DET_H
 

@@ -5,45 +5,47 @@
 #include "Module_det_rk35xx_impl.h"
 #include "debug.h"
 
-CModule_det::CModule_det()
+namespace rk35xx_det
 {
-    impl_ = new CModule_det_rk35xx_impl();
-}
-
-CModule_det::~CModule_det()
-{
-    if(ANY_POINTER_CAST(impl_, CModule_det_impl))
+    CModule_det::CModule_det()
     {
-        delete ANY_POINTER_CAST(impl_, CModule_det_impl);
+        impl_ = new CModule_det_rk35xx_impl();
+    }
+
+    CModule_det::~CModule_det()
+    {
+        if (ANY_POINTER_CAST(impl_, CModule_det_impl))
+        {
+            delete ANY_POINTER_CAST(impl_, CModule_det_impl);
+        }
+    }
+
+    void CModule_det::init(const YoloConfig &config)
+    {
+        ANY_POINTER_CAST(impl_, CModule_det_impl)->init(config);
+    }
+
+    void CModule_det::deinit()
+    {
+#ifdef ALG_DEBUG
+        AIALG_PRINT("release success begin\n");
+#endif
+        ANY_POINTER_CAST(impl_, CModule_det_impl)->deinit();
+#ifdef ALG_DEBUG
+        AIALG_PRINT("release success end!\n");
+#endif
+    }
+
+    void CModule_det::process_batch(const ImageInfoUint8 *imageInfos, int batch_size)
+    {
+        ANY_POINTER_CAST(impl_, CModule_det_impl)->process(imageInfos, batch_size);
+    }
+
+    const BoxInfos *CModule_det::get_result()
+    {
+        return ANY_POINTER_CAST(impl_, CModule_det_impl)->get_result();
     }
 }
-
-void CModule_det::init(const YoloConfig& config)
-{
-    ANY_POINTER_CAST(impl_, CModule_det_impl)->init(config);
-}
-
-void CModule_det::deinit()
-{
-#ifdef ALG_DEBUG
-    AIALG_PRINT("release success begin\n");
-#endif
-    ANY_POINTER_CAST(impl_, CModule_det_impl)->deinit();
-#ifdef ALG_DEBUG
-    AIALG_PRINT("release success end!\n");
-#endif
-}
-
-void CModule_det::process(const ImageInfoUint8 *imageInfos, int batch_size)
-{
-    ANY_POINTER_CAST(impl_, CModule_det_impl)->process(imageInfos, batch_size);
-}
-
-const BoxInfos* CModule_det::get_result()
-{
-    return ANY_POINTER_CAST(impl_, CModule_det_impl)->get_result();
-}
-
 ///************************* c api *************************/
 //void alg_det_init(Handle* handle, const net_config_tag_c* config)
 //{
