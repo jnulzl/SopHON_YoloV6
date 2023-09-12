@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
     output_names.clear();
     output_names.emplace_back("pred_bboxes");
     output_names.emplace_back("max_index");
-    output_names.emplace_back("max_scores");
+//    output_names.emplace_back("max_scores");
 
     YoloConfig config_tmp;
     float means_rgb[3] = {0, 0, 0};

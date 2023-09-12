@@ -60,10 +60,10 @@ namespace rk35xx_det
         roi.height = roi_new_height_;
 
         cv::Mat mat = cv::Mat(img_height_, img_width_, CV_8UC3, imageInfo.data, imageInfo.stride);
-//    cv::Mat mat_rgb;
-//    cv::cvtColor(mat, mat_rgb, cv::COLOR_BGR2RGB); // 3ms
+        cv::Mat mat_rgb;
+        cv::cvtColor(mat, mat_rgb, cv::COLOR_BGR2RGB); // 3ms
         cv::Mat des_tmp = *reinterpret_cast<cv::Mat *>(des_mat_);
-        cv::resize(mat, des_tmp(roi), cv::Size(roi_new_width_, roi_new_height_), 0, 0, cv::INTER_NEAREST);
+        cv::resize(mat_rgb, des_tmp(roi), cv::Size(roi_new_width_, roi_new_height_), 0, 0, cv::INTER_NEAREST);
         src_resize_ptr_ = reinterpret_cast<cv::Mat *>(des_mat_)->data; //rgb
     }
 
@@ -72,6 +72,7 @@ namespace rk35xx_det
 #ifdef ALG_DEBUG
         std::chrono::time_point<std::chrono::system_clock> begin_time_nms = std::chrono::system_clock::now();
 #endif
+        boxs_res_.frame_id = imageInfos[0].frame_id;
         pre_process(imageInfos[0]);
 #ifdef ALG_DEBUG
         std::chrono::time_point<std::chrono::system_clock> end_time_nms = std::chrono::system_clock::now();
@@ -121,7 +122,6 @@ namespace rk35xx_det
             boxs_res_.size = 0;
         }
         boxs_res_.size = det_obj;
-        boxs_res_.frame_id = frame_id_;
         for (int idx = 0; idx < det_obj; ++idx)
         {
             boxs_res_.boxes[idx] = boxs_tmp_[keep_indexs_[idx]];

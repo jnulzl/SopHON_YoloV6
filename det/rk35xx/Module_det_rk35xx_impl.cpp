@@ -99,6 +99,20 @@ namespace rk35xx_det
     }
 #else
 
+    static void getMaxValAndIn(const float* data, int data_len, float& max_val, int& max_index)
+    {
+        max_val = -1.0e6;
+        max_index = -1;
+        for (int idx = 0; idx < data_len; idx++)
+        {
+            if (data[idx] > max_val)
+            {
+                max_val = data[idx];
+                max_index = idx;
+            }
+        }
+    }
+
     static void getTopKBoxesFromFloatOutput(const float *boxes, const float *indexs, const float *scores,
                                             int obj_num, int topk,
                                             std::vector<float> &topK_boxes_scores_labels)
@@ -362,12 +376,29 @@ namespace rk35xx_det
             topK_boxes_scores_labels_.resize(elem_num);
         }
 
+        if (max_scores_.empty())
+        {
+            max_scores_.resize( output_attrs_[0].dims[1]);
+        }
+
+        if (max_indexs_.empty())
+        {
+            max_indexs_.resize(output_attrs_[0].dims[1]);
+        }
+
 #ifdef DET_USE_FLOAT_OUTPUT
-        const float *max_socres = reinterpret_cast<const float *>(output_mems_[2]->virt_addr);
-        const float *max_index = reinterpret_cast<const float *>(output_mems_[1]->virt_addr);
-        const float *pred_bboxes = reinterpret_cast<const float *>(output_mems_[0]->virt_addr);
-        getTopKBoxesFromFloatOutput(pred_bboxes, max_index, max_socres,
-                                    output_attrs_[2].n_elems, topK_, topK_boxes_scores_labels_);
+        const float *score_index = reinterpret_cast<const float *>(output_mems_[0]->virt_addr);
+        const float *pred_bboxes = reinterpret_cast<const float *>(output_mems_[1]->virt_addr);
+        for (int idx = 0; idx < output_attrs_[0].dims[1]; ++idx)
+        {
+            float max_score;
+            int max_index;
+            getMaxValAndIn(score_index + idx * output_attrs_[0].dims[2], output_attrs_[0].dims[2], max_score, max_index);
+            max_scores_[idx] = max_score;
+            max_indexs_[idx] = max_index;
+        }
+        getTopKBoxesFromFloatOutput(pred_bboxes, max_indexs_.data(), max_scores_.data(),
+                                    max_indexs_.size(), topK_, topK_boxes_scores_labels_);
 #else
         const int8_t * max_socres = reinterpret_cast<const int8_t *>(output_mems_[2]->virt_addr);
         const int8_t * max_index = reinterpret_cast<const int8_t *>(output_mems_[1]->virt_addr);

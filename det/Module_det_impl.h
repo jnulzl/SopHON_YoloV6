@@ -36,10 +36,11 @@ namespace rk35xx_det
     protected:
         YoloConfig config_;
         std::vector<float> topK_boxes_scores_labels_;
+        std::vector<float> max_scores_;
+        std::vector<float> max_indexs_;
         std::vector<int> keep_indexs_;
         int img_height_;
         int img_width_;
-        int frame_id_;
         float roi_new_width_;
         float roi_new_height_;
 
