@@ -387,13 +387,13 @@ namespace rk35xx_det
         }
 
 #ifdef DET_USE_FLOAT_OUTPUT
-        const float *score_index = reinterpret_cast<const float *>(output_mems_[0]->virt_addr);
-        const float *pred_bboxes = reinterpret_cast<const float *>(output_mems_[1]->virt_addr);
-        for (int idx = 0; idx < output_attrs_[0].dims[1]; ++idx)
+        const float *pred_bboxes = reinterpret_cast<const float *>(output_mems_[0]->virt_addr);
+        const float *score_index = reinterpret_cast<const float *>(output_mems_[1]->virt_addr);
+        for (int idx = 0; idx < output_attrs_[1].dims[1]; ++idx)
         {
             float max_score;
             int max_index;
-            getMaxValAndIn(score_index + idx * output_attrs_[0].dims[2], output_attrs_[0].dims[2], max_score, max_index);
+            getMaxValAndIn(score_index + idx * output_attrs_[1].dims[2], output_attrs_[1].dims[2], max_score, max_index);
             max_scores_[idx] = max_score;
             max_indexs_[idx] = max_index;
         }
