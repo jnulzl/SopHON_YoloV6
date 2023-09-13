@@ -37,7 +37,7 @@ endif()
 target_link_libraries(${exe_name} PRIVATE
         rknnrt
 #        ${OpenCV_LIBS}
-        mpp
+#        mpp
         opencv_java4
 )
 

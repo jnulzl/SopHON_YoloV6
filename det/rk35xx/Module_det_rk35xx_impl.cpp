@@ -346,10 +346,10 @@ namespace rk35xx_det
                 dst_ptr += dst_wc_elems;
             }
         }
-//    #ifdef ALG_DEBUG
-//        cv::Mat src_tmp(config_.net_inp_height, config_.net_inp_width, CV_8UC3, src_resize_ptr_);
-//        cv::imwrite("src_tmp.jpg", src_tmp);
-//    #endif
+    #ifdef ALG_DEBUG
+        cv::Mat src_tmp(config_.net_inp_height, config_.net_inp_width, CV_8UC3, src_resize_ptr_);
+        cv::imwrite("src_tmp.jpg", src_tmp);
+    #endif
 #endif
     }
 

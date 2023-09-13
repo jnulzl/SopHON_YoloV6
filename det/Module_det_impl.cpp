@@ -60,10 +60,9 @@ namespace rk35xx_det
         roi.height = roi_new_height_;
 
         cv::Mat mat = cv::Mat(img_height_, img_width_, CV_8UC3, imageInfo.data, imageInfo.stride);
-        cv::Mat mat_rgb;
-        cv::cvtColor(mat, mat_rgb, cv::COLOR_BGR2RGB); // 3ms
         cv::Mat des_tmp = *reinterpret_cast<cv::Mat *>(des_mat_);
-        cv::resize(mat_rgb, des_tmp(roi), cv::Size(roi_new_width_, roi_new_height_), 0, 0, cv::INTER_NEAREST);
+        cv::resize(mat, des_tmp(roi), cv::Size(roi_new_width_, roi_new_height_), 0, 0, cv::INTER_NEAREST);
+        cv::cvtColor(des_tmp(roi), des_tmp(roi), cv::COLOR_BGR2RGB);
         src_resize_ptr_ = reinterpret_cast<cv::Mat *>(des_mat_)->data; //rgb
     }
 
