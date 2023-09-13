@@ -27,7 +27,7 @@ struct BaseConfig
     int net_inp_width;
     int net_inp_height;
     int num_threads = 2;
-#ifdef USE_CUDA
+#if defined(USE_CUDA) || defined(USE_RK3588)
     int batch_size = 1;
     int device_id = 0;
 #ifdef USE_TENSORRT

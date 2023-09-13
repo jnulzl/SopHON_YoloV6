@@ -224,6 +224,26 @@ namespace rk35xx_det
         }
         printf("model input num: %d, output num: %d\n", io_num.n_input, io_num.n_output);
 
+#ifdef USE_RK3588
+        // 指定NPU核心数量，仅3588支持
+        int device_id_map = 0;
+        switch(config_.device_id)
+        {
+            case 0:
+                device_id_map = 1;
+                break;
+            case 1:
+                device_id_map = 2;
+                break;
+            case 2:
+                device_id_map = 4;
+                break;
+            default:
+                device_id_map = 0;
+        }
+        rknn_set_core_mask(ctx_, (rknn_core_mask)device_id_map);
+#endif
+
         printf("input tensors: %d\n", io_num.n_input);
         input_attrs_.resize(io_num.n_input);
         input_mems_.resize(io_num.n_input);
@@ -305,8 +325,6 @@ namespace rk35xx_det
     void CModule_det_rk35xx_impl::pre_process(const ImageInfoUint8 &imageInfo)
     {
         CModule_det_impl::pre_process(imageInfo);
-
-//#if 1
 #ifdef USE_RGA
         /*--------------------------------pre_process with rga-----------------------------------*/
         // https://github.com/rockchip-linux/rknpu2/blob/master/examples/rknn_yolov5_android_apk_demo/app/src/main/cpp/yolo_image.cc#L236

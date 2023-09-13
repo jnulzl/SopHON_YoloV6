@@ -68,10 +68,10 @@ int main(int argc, char* argv[])
     config_tmp.anchor_grids = { {10, 13, 16, 30, 33, 23} , {30, 61, 62, 45, 59, 119}, {116, 90, 156, 198, 373, 326} };
 
     std::string project_root = "./";
-    if(argc < 5)
+    if(argc < 6)
     {
         std::cout << "Usage:\n\t "
-                  << argv[0] << " onnx_model_path input_size num_cls image_list"
+                  << argv[0] << " onnx_model_path input_size num_cls device_id image_list"
                   << std::endl;
         return -1;
     }
@@ -87,6 +87,7 @@ int main(int argc, char* argv[])
     config_tmp.net_inp_width = input_size;
     config_tmp.net_inp_height = config_tmp.net_inp_width;
     config_tmp.num_cls = std::atoi(argv[3]);
+    config_tmp.device_id = std::atoi(argv[4]);
     config_tmp.conf_thres = 0.6;
     config_tmp.nms_thresh = 0.4;
 
@@ -95,7 +96,7 @@ int main(int argc, char* argv[])
     std::cout << "Loading rknn model end!" << std::endl;
 
     std::vector<std::string> img_list;
-    alg_utils::get_all_line_from_txt(argv[4], img_list);
+    alg_utils::get_all_line_from_txt(argv[5], img_list);
     
     long frame_id = 0;
     ImageInfoUint8 image_Info_Uint8;
