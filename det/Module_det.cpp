@@ -89,7 +89,7 @@ namespace rk35xx_det
 //        ANY_POINTER_CAST(handle, CModule_det)->deinit();
 //        delete ANY_POINTER_CAST(handle, CModule_det);
 //#if defined(ALG_DEBUG) || defined(ALPHAPOSE_DEBUG)
-//        std::printf("%d,%s\n", __LINE__, __FUNCTION__);
+//        AIALG_PRINT("%d,%s\n", __LINE__, __FUNCTION__);
 //#endif
 //    }
 //}
@@ -108,7 +108,7 @@ namespace rk35xx_det
 //    }
 //    else
 //    {
-//        std::printf("unsupported image format\n");
+//        AIALG_PRINT("unsupported image format\n");
 //    }
 //}
 //

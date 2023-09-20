@@ -3,6 +3,7 @@
 //
 #include <algorithm>
 #include "opencv2/opencv.hpp"
+#include "rga.h"
 #include "rk35xx/Module_det_rk35xx_impl.h"
 #include "alg_define.h"
 #include "debug.h"
@@ -13,7 +14,7 @@ namespace rk35xx_det
 #ifdef ALG_DEBUG
     static void printRKNNTensor(rknn_tensor_attr *attr)
     {
-        printf("index=%d name=%s n_dims=%d dims=[%d %d %d %d] n_elems=%d size=%d fmt=%d type=%d qnt_type=%d fl=%d zp=%d scale=%f\n",
+        AIALG_PRINT("index=%d name=%s n_dims=%d dims=[%d %d %d %d] n_elems=%d size=%d fmt=%d type=%d qnt_type=%d fl=%d zp=%d scale=%f\n",
                attr->index, attr->name, attr->n_dims, attr->dims[0], attr->dims[1], attr->dims[2], attr->dims[3],
                attr->n_elems, attr->size, attr->fmt, attr->type, attr->qnt_type, attr->fl, attr->zp, attr->scale);
     }
@@ -24,7 +25,7 @@ namespace rk35xx_det
         FILE *fp = fopen(filename, "rb");
         if (fp == nullptr)
         {
-            printf("fopen %s fail!\n", filename);
+            AIALG_PRINT("fopen %s fail!\n", filename);
             return NULL;
         }
         fseek(fp, 0, SEEK_END);
@@ -33,7 +34,7 @@ namespace rk35xx_det
         fseek(fp, 0, SEEK_SET);
         if (model_len != fread(model, 1, model_len, fp))
         {
-            printf("fread %s fail!\n", filename);
+            AIALG_PRINT("fread %s fail!\n", filename);
             free(model);
             return NULL;
         }
@@ -200,7 +201,7 @@ namespace rk35xx_det
         int ret = rknn_init(&ctx_, model_buffer_, model_len, 0, nullptr);
         if (ret < 0)
         {
-            printf("rknn_init fail! ret=%d\n", ret);
+            AIALG_PRINT("rknn_init fail! ret=%d\n", ret);
             exit(-1);
         }
 
@@ -209,20 +210,20 @@ namespace rk35xx_det
         ret = rknn_query(ctx_, RKNN_QUERY_SDK_VERSION, &sdk_ver, sizeof(sdk_ver));
         if (ret != RKNN_SUCC)
         {
-            printf("rknn_query fail! ret=%d\n", ret);
+            AIALG_PRINT("rknn_query fail! ret=%d\n", ret);
             exit(-1);
         }
-        printf("rknn_api/rknnrt version: %s, driver version: %s\n", sdk_ver.api_version, sdk_ver.drv_version);
+        AIALG_PRINT("rknn_api/rknnrt version: %s, driver version: %s\n", sdk_ver.api_version, sdk_ver.drv_version);
 
         // Get Model Input Output Info
         rknn_input_output_num io_num;
         ret = rknn_query(ctx_, RKNN_QUERY_IN_OUT_NUM, &io_num, sizeof(io_num));
         if (ret != RKNN_SUCC)
         {
-            printf("rknn_query fail! ret=%d\n", ret);
+            AIALG_PRINT("rknn_query fail! ret=%d\n", ret);
             exit(-1);
         }
-        printf("model input num: %d, output num: %d\n", io_num.n_input, io_num.n_output);
+        AIALG_PRINT("model input num: %d, output num: %d\n", io_num.n_input, io_num.n_output);
 
 #ifdef USE_RK3588
         // 指定NPU核心数量，仅3588支持
@@ -244,7 +245,7 @@ namespace rk35xx_det
         rknn_set_core_mask(ctx_, (rknn_core_mask)device_id_map);
 #endif
 
-        printf("input tensors: %d\n", io_num.n_input);
+        AIALG_PRINT("input tensors: %d\n", io_num.n_input);
         input_attrs_.resize(io_num.n_input);
         input_mems_.resize(io_num.n_input);
         memset(input_attrs_.data(), 0, io_num.n_input * sizeof(rknn_tensor_attr));
@@ -254,7 +255,7 @@ namespace rk35xx_det
             ret = rknn_query(ctx_, RKNN_QUERY_INPUT_ATTR, &(input_attrs_[i]), sizeof(rknn_tensor_attr));
             if (ret != RKNN_SUCC)
             {
-                printf("rknn_query fail! ret=%d\n", ret);
+                AIALG_PRINT("rknn_query fail! ret=%d\n", ret);
                 exit(-1);
             }
             input_mems_[i] = rknn_create_mem(ctx_, input_attrs_[i].size_with_stride);
@@ -280,7 +281,7 @@ namespace rk35xx_det
             printRKNNTensor(&(input_attrs_[i]));
 #endif
         }
-        printf("output tensors: %d\n", io_num.n_output);
+        AIALG_PRINT("output tensors: %d\n", io_num.n_output);
         output_attrs_.resize(io_num.n_output);
         output_mems_.resize(io_num.n_output);
         out_scales_.resize(io_num.n_output);
@@ -292,7 +293,7 @@ namespace rk35xx_det
             ret = rknn_query(ctx_, RKNN_QUERY_OUTPUT_ATTR, &(output_attrs_[i]), sizeof(rknn_tensor_attr));
             if (ret != RKNN_SUCC)
             {
-                printf("rknn_query fail! ret=%d\n", ret);
+                AIALG_PRINT("rknn_query fail! ret=%d\n", ret);
                 exit(-1);
             }
             // https://github.com/rockchip-linux/rknpu2/blob/master/examples/rknn_yolov5_android_apk_demo/app/src/main/cpp/yolo_image.cc#L163
@@ -313,7 +314,7 @@ namespace rk35xx_det
             ret = rknn_set_io_mem(ctx_, output_mems_[i], &output_attrs_[i]);
             if (ret < 0)
             {
-                printf("rknn_set_io_mem fail! ret=%d\n", ret);
+                AIALG_PRINT("rknn_set_io_mem fail! ret=%d\n", ret);
                 exit(-1);
             }
 #ifdef ALG_DEBUG
@@ -324,21 +325,60 @@ namespace rk35xx_det
 
     void CModule_det_rk35xx_impl::pre_process(const ImageInfoUint8 &imageInfo)
     {
-        CModule_det_impl::pre_process(imageInfo);
 #ifdef USE_RGA
         /*--------------------------------pre_process with rga-----------------------------------*/
         // https://github.com/rockchip-linux/rknpu2/blob/master/examples/rknn_yolov5_android_apk_demo/app/src/main/cpp/yolo_image.cc#L236
-        src_rga_buffer_ = wrapbuffer_virtualaddr((void*)src_resize_ptr_,
-                                                 config_.net_inp_width, config_.net_inp_height,
-                                                 RK_FORMAT_RGB_888); // wstride, hstride,
+        src_rga_buffer_ = wrapbuffer_virtualaddr((void*)imageInfo.data,
+                                                 imageInfo.img_width, imageInfo.img_height,
+                                                 RK_FORMAT_BGR_888); // wstride, hstride,
 
-        IM_STATUS ret = imresize(src_rga_buffer_, dst_rga_buffer_);
-        if (IM_STATUS_SUCCESS != ret) {
-            printf("run_yolo: resize image with rga failed: %s\n", imStrError((IM_STATUS)ret));
+        // https://github.com/airockchip/rknn_model_zoo/blob/main/models/CV/object_detection/yolo/RKNN_C_demo/yolo_utils/resize_function.cc#L113
+        // https://github.com/airockchip/rknn_model_zoo/blob/main/models/CV/object_detection/yolo/RKNN_C_demo/yolo_utils/resize_function.cc#L143
+        if (img_width_ != imageInfo.img_width || img_height_ != imageInfo.img_height)
+        {
+            img_width_ = imageInfo.img_width;
+            img_height_ = imageInfo.img_height;
+            float scale_wh = 1.0 * std::fmax(1.0 * config_.net_inp_height, 1.0 * config_.net_inp_width) /
+                             std::fmax(1.0 * img_height_, 1.0 * img_width_);
+            roi_new_width_ = img_width_ * scale_wh;
+            roi_new_height_ = img_height_ * scale_wh;
+        }
+
+        im_rect src_rect;
+        src_rect.x = 0;
+        src_rect.y = 0;
+        src_rect.width = imageInfo.img_width;
+        src_rect.height = imageInfo.img_height;
+
+        im_rect dst_rect;
+        dst_rect.x = 0;
+        dst_rect.y = 0;
+        dst_rect.width = roi_new_width_;
+        dst_rect.height = roi_new_height_;
+
+        IM_STATUS ret = imcheck(src_rga_buffer_, dst_rga_buffer_, src_rect, dst_rect);
+        if (IM_STATUS_NOERROR != ret)
+        {
+            AIALG_PRINT("rga letter box resize check error!  %d\n", ret);
             exit(-1);
         }
+
+        ret = improcess(src_rga_buffer_, dst_rga_buffer_, {}, src_rect, dst_rect, {}, IM_SYNC);
+        if (IM_STATUS_SUCCESS != ret)
+        {
+            AIALG_PRINT("%s improcess failed, %s\n", "rga letter box resize", imStrError((IM_STATUS)ret));
+            exit(-1);
+        }
+
+//        ret = imcvtcolor(dst_rga_buffer_, dst_rga_buffer_, RK_FORMAT_BGR_888, RK_FORMAT_RGB_888);
+//        if (IM_STATUS_SUCCESS != ret)
+//        {
+//            AIALG_PRINT("%s imcvtcolor failed, %s\n", "rga letter box resize", imStrError((IM_STATUS)ret));
+//            exit(-1);
+//        }
 #else
         /*--------------------------------pre_process without rga-----------------------------------*/
+        CModule_det_impl::pre_process(imageInfo);
         // Copy input data to input tensor memory
         int width = input_attrs_[0].dims[2];
         int stride = input_attrs_[0].w_stride;
@@ -364,10 +404,10 @@ namespace rk35xx_det
                 dst_ptr += dst_wc_elems;
             }
         }
-    #ifdef ALG_DEBUG
-        cv::Mat src_tmp(config_.net_inp_height, config_.net_inp_width, CV_8UC3, src_resize_ptr_);
-        cv::imwrite("src_tmp.jpg", src_tmp);
-    #endif
+//    #ifdef ALG_DEBUG
+//        cv::Mat src_tmp(config_.net_inp_height, config_.net_inp_width, CV_8UC3, src_resize_ptr_);
+//        cv::imwrite("src_tmp.jpg", src_tmp);
+//    #endif
 #endif
     }
 
@@ -380,7 +420,7 @@ namespace rk35xx_det
         int ret = rknn_run(ctx_, nullptr);
         if (ret < 0)
         {
-            printf("rknn_run fail! ret=%d\n", ret);
+            AIALG_PRINT("rknn_run fail! ret=%d\n", ret);
             exit(-1);
         }
 #ifdef ALG_DEBUG

@@ -86,7 +86,7 @@ set(RKNN_INCLUDE ${RKNN_DIR}/include)
 set(RKNN_LIB_PATH ${RKNN_DIR}/lib/${ANDROID_ABI})
 
 ##############RGA##############
-set(RGA_DIR ${THIRD_PARTY_ROOT}/${ENGINE_UPPER}/rga/)
+set(RGA_DIR ${THIRD_PARTY_ROOT}/${ENGINE_UPPER}/rga191/) # rga132 rga191
 set(RGA_INCLUDE ${RGA_DIR}/include)
 set(RGA_LIB_PATH ${RGA_DIR}/lib/${ANDROID_ABI})
 

@@ -34,8 +34,19 @@ std::string trim(const std::string& str) {
     return str.substr(left, (right - left + 1));
 }
 
-const static std::vector<std::string> det_labels = {"cleaning", "dump", "heating", "imbedding", "put_off", "titrate",
+const static std::vector<std::string> top_labels = {"cleaning", "dump", "heating", "imbedding", "put_off", "titrate",
                                                     "wipe", "write", "paste_label", "stir", "write_label", "others"};
+
+const static std::vector<std::string> side_labels = {"alcohol_burner", "beaker", "catheter_plus", "centerMark",
+                                                "dishcloth", "distilled_water", "dropper", "erlenmeyer_flask",
+                                                "filter_paper_plus", "flame", "flume", "funnel", "gas_cylinder",
+                                                "glass_rod",
+                                                "glass_sheet", "glass_stopper", "graduated_cylinder",
+                                                "iron_support", "litmus", "long_neck_funnel", "marble",
+                                                "medicine_spoon", "ph_paper",
+                                                "reagent_bottles", "stopper", "tag", "test_color_card",
+                                                "test_tube", "test_tube_clamp",
+                                                "tweezers", "wooden_strips"};
 
 int main(int argc, char* argv[])
 {
@@ -87,7 +98,9 @@ int main(int argc, char* argv[])
     config_tmp.net_inp_width = input_size;
     config_tmp.net_inp_height = config_tmp.net_inp_width;
     config_tmp.num_cls = std::atoi(argv[3]);
+#ifdef USE_RK3588
     config_tmp.device_id = std::atoi(argv[4]);
+#endif
     config_tmp.conf_thres = 0.6;
     config_tmp.nms_thresh = 0.4;
 
@@ -131,9 +144,16 @@ int main(int argc, char* argv[])
             int ymax    = res[0].boxes[idy].y2;
             float score = res[0].boxes[idy].score;
             int label   = res[0].boxes[idy].label;
-            std::cout << "xyxy : " << xmin << " " << ymin << " " << xmax << " " << ymax << " " << score << " " << label << std::endl;
+            std::cout << "xywh : " << xmin << " " << ymin << " " << xmax - xmin << " " << ymax - ymin << " " << score << " " << label << std::endl;
             cv::rectangle(frame, cv::Point2i(xmin, ymin), cv::Point2i(xmax, ymax), cv::Scalar(255, 0, 0), 2);
-            cv::putText(frame, det_labels[label], cv::Point(xmin, ymin), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 0, 255), 2);
+            if(config_tmp.num_cls > 25)
+            {
+                cv::putText(frame, side_labels[label], cv::Point(xmin, ymin), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 0, 255), 2);
+            }
+            else
+            {
+                cv::putText(frame, top_labels[label], cv::Point(xmin, ymin), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 0, 255), 2);
+            }
             cv::putText(frame, std::to_string(score), cv::Point(xmax, ymin), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0, 255, 255), 2);
         }
 
