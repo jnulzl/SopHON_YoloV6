@@ -7,6 +7,8 @@
 
 - cmake, git, make等等,根据实际情况缺什么安装什么
 
+- OpenCV 4.8.0
+
 - [rknn-toolkit2](https://github.com/rockchip-linux/rknn-toolkit2)
 
 - [rknpu2](https://github.com/rockchip-linux/rknpu2)
