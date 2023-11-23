@@ -7,11 +7,15 @@
 
 - cmake, git, make等等,根据实际情况缺什么安装什么
 
+- OpenCV 4.8.0
+
 - [rknn-toolkit2](https://github.com/rockchip-linux/rknn-toolkit2)
 
 - [rknpu2](https://github.com/rockchip-linux/rknpu2)
 
 - [android-ndk-r25c-linux](https://dl.google.com/android/repository/android-ndk-r25c-linux.zip)
+
+- [third_party](https://gitlab.malong.com/lizhaoliang/third_party)
 
 ## 模型量化
 
