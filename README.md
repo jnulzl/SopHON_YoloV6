@@ -11,7 +11,7 @@
 
 - [rknpu2](https://github.com/rockchip-linux/rknpu2)
 
-- [Android NDK 16](https://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip)
+- [android-ndk-r25c-linux](https://dl.google.com/android/repository/android-ndk-r25c-linux.zip)
 
 ## 模型量化
 
