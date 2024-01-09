@@ -117,7 +117,7 @@ static void cudaFastFree(void* devPtr, size_t device_id)
     #endif
 #endif
 
-#if defined(__aarch64__) || defined(__arm__)
+#if defined(__ANDROID__)
 #include <android/log.h>
 
 #define AIALG_PRINT(format, ...) printf("%s:%d, %s:", __FILE__, __LINE__, __FUNCTION__); \

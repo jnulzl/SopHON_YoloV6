@@ -3,8 +3,10 @@
 //
 #include <algorithm>
 #include "opencv2/opencv.hpp"
-#include "rga.h"
-#include "rk35xx/Module_det_rk35xx_impl.h"
+#ifdef USE_RGA
+    #include "rga.h"
+#endif
+#include "Module_det_rk356x_impl.h"
 #include "alg_define.h"
 #include "debug.h"
 
@@ -189,12 +191,13 @@ namespace rk35xx_det
 
     void CModule_det_rk35xx_impl::engine_init()
     {
+#ifdef USE_RGA
         // init rga context
         memset(&src_rect_, 0, sizeof(src_rect_));
         memset(&dst_rect_, 0, sizeof(dst_rect_));
         memset(&src_rga_buffer_, 0, sizeof(src_rga_buffer_));
         memset(&dst_rga_buffer_, 0, sizeof(dst_rga_buffer_));
-
+#endif
         // Load RKNN Model
         int model_len = 0;
         model_buffer_ = load_model(config_.weights_path.c_str(), &model_len);

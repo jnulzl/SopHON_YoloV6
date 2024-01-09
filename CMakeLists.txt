@@ -2,8 +2,15 @@ cmake_minimum_required(VERSION 3.15)
 project(RK35XX_det)
 
 set(CMAKE_CXX_STANDARD 14)
-set(CMAKE_ANDROID_STL_TYPE gnustl_static)
-set(CMAKE_SYSTEM_NAME Android)
+if(NOT CMAKE_SYSTEM_NAME)
+    set(CMAKE_SYSTEM_NAME Android)
+endif()
+
+if("Android" STREQUAL ${CMAKE_SYSTEM_NAME})
+    set(CMAKE_ANDROID_STL_TYPE gnustl_static)
+    set(SYSTEM_ABI ${ANDROID_ABI})
+endif()
+
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 message(STATUS "CMAKE_SYSTEM_NAME      : " ${CMAKE_SYSTEM_NAME})
@@ -40,14 +47,6 @@ if(USE_RGA)
      add_compile_definitions(USE_RGA)
 endif()
 
-if(NOT USE_JNI)
-    set(USE_JNI OFF)
-endif()
-if(USE_JNI)
-    add_compile_definitions(USE_JNI)
-endif()
-
-
 if(NOT OUTPUT_DIRECTORY)
     set(OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin/${CMAKE_SYSTEM_NAME}/${ENGINE_UPPER})
 endif()
@@ -76,36 +75,46 @@ set(LIBRARY_OUTPUT_PATH ${EXECUTABLE_OUTPUT_PATH})
 
 set(THIRD_PARTY_ROOT ${PROJECT_SOURCE_DIR}/../third_party/${CMAKE_SYSTEM_NAME})
 ##############opencv##############
-set(OpenCV_DIR_ROOT ${THIRD_PARTY_ROOT}/OpenCV-android-sdk/sdk/native)
-set(OpenCV_DIR ${OpenCV_DIR_ROOT}/jni/abi-${ANDROID_ABI})
-find_package(OpenCV REQUIRED)
+if("Android" STREQUAL ${CMAKE_SYSTEM_NAME})
+    set(OpenCV_DIR_ROOT ${THIRD_PARTY_ROOT}/OpenCV-android-sdk/sdk/native)
+    set(OpenCV_DIR ${OpenCV_DIR_ROOT}/jni/abi-${ANDROID_ABI})
+    find_package(OpenCV REQUIRED)
+    set(OpenCV_INCLUDE_PATH ${OpenCV_INCLUDE_DIRS})
+    set(OpenCV_LIB_PATH ${OpenCV_DIR_ROOT}/libs/${ANDROID_ABI})
+else()
+    set(OpenCV_DIR_ROOT ${THIRD_PARTY_ROOT}/opencv420)
+    set(OpenCV_INCLUDE_PATH ${OpenCV_DIR_ROOT}/include/opencv4 ${OpenCV_DIR_ROOT}/include/opencv4/opencv2)
+    set(OpenCV_LIB_PATH ${OpenCV_DIR_ROOT}/lib)
+endif()
 
 ##############RK35XX##############
 set(RKNN_DIR ${THIRD_PARTY_ROOT}/${ENGINE_UPPER}/librknn_api/)
 set(RKNN_INCLUDE ${RKNN_DIR}/include)
-set(RKNN_LIB_PATH ${RKNN_DIR}/lib/${ANDROID_ABI})
+set(RKNN_LIB_PATH ${RKNN_DIR}/lib/${SYSTEM_ABI})
 
 ##############RGA##############
-set(RGA_DIR ${THIRD_PARTY_ROOT}/${ENGINE_UPPER}/rga191/) # rga132 rga191
-set(RGA_INCLUDE ${RGA_DIR}/include)
-set(RGA_LIB_PATH ${RGA_DIR}/lib/${ANDROID_ABI})
+if(USE_RGA)
+    set(RGA_DIR ${THIRD_PARTY_ROOT}/${ENGINE_UPPER}/rga191/) # rga132 rga191
+    set(RGA_INCLUDE ${RGA_DIR}/include)
+    set(RGA_LIB_PATH ${RGA_DIR}/lib/${SYSTEM_ABI})
+endif()
 
 ##############MPP##############
 set(MPP_DIR ${THIRD_PARTY_ROOT}/mpp)
 set(MPP_INCLUDE ${MPP_DIR}/include ${MPP_DIR}/include/rockchip)
-set(MPP_LIB_PATH ${MPP_DIR}/lib/${ANDROID_ABI})
+set(MPP_LIB_PATH ${MPP_DIR}/lib/${SYSTEM_ABI})
 
 set(INCLUDE_PATH ${INCLUDE_PATH}
         ${RKNN_INCLUDE}
         ${RGA_INCLUDE}
         ${MPP_INCLUDE}
-        ${OpenCV_INCLUDE_DIRS}
+        ${OpenCV_INCLUDE_PATH}
         )
 set(LIB_PATH ${LIB_PATH}
         ${RKNN_LIB_PATH}
         ${RGA_LIB_PATH}
         ${MPP_LIB_PATH}
-        ${OpenCV_DIR_ROOT}/libs/${ANDROID_ABI}
+        ${OpenCV_LIB_PATH}
         )
 
 include_directories(${INCLUDE_PATH})

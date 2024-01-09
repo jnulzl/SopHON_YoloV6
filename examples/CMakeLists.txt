@@ -38,8 +38,21 @@ target_link_libraries(${exe_name} PRIVATE
         rknnrt
 #        ${OpenCV_LIBS}
 #        mpp
-        opencv_java4
 )
+if("Android" STREQUAL ${CMAKE_SYSTEM_NAME})
+    target_link_libraries(${exe_name} PRIVATE
+            opencv_java4
+            )
+else()
+    target_link_libraries(${exe_name} PRIVATE
+            opencv_core
+            opencv_highgui
+            opencv_imgproc
+            opencv_imgcodecs
+            opencv_video
+            opencv_videoio
+            )
+endif()
 
 if(USE_RGA)
     target_link_libraries(${exe_name} PRIVATE rga)

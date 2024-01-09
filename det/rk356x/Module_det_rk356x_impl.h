@@ -7,13 +7,15 @@
 
 #include "Module_det_impl.h"
 #include "rknn_api.h"
-#include "im2d.h"
+#ifdef USE_RGA
+    #include "im2d.h"
+#endif
 
 namespace rk35xx_det
 {
 
-#define ALIGN 8
-#define DET_USE_FLOAT_OUTPUT
+    #define ALIGN 8
+    #define DET_USE_FLOAT_OUTPUT
 
     class CModule_det_rk35xx_impl : public CModule_det_impl
     {
@@ -41,10 +43,12 @@ namespace rk35xx_det
         std::vector<float> out_scales_;
         std::vector<int32_t> out_zps_;
         // init rga context
+#ifdef USE_RGA
         rga_buffer_t src_rga_buffer_;
         rga_buffer_t dst_rga_buffer_;
         im_rect src_rect_;
         im_rect dst_rect_;
+#endif
     };
 }
 #endif //MODULE_DET_RK35XX_IMPL_H
