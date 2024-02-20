@@ -6,7 +6,7 @@
 #ifdef USE_RGA
     #include "rga.h"
 #endif
-#include "Module_det_rk356x_impl.h"
+#include "Module_det_rk35xx_impl.h"
 #include "alg_define.h"
 #include "debug.h"
 

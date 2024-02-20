@@ -82,8 +82,10 @@ if("Android" STREQUAL ${CMAKE_SYSTEM_NAME})
     set(OpenCV_INCLUDE_PATH ${OpenCV_INCLUDE_DIRS})
     set(OpenCV_LIB_PATH ${OpenCV_DIR_ROOT}/libs/${ANDROID_ABI})
 else()
-    set(OpenCV_DIR_ROOT ${THIRD_PARTY_ROOT}/opencv420)
-    set(OpenCV_INCLUDE_PATH ${OpenCV_DIR_ROOT}/include/opencv4 ${OpenCV_DIR_ROOT}/include/opencv4/opencv2)
+    set(OpenCV_DIR_ROOT ${THIRD_PARTY_ROOT}/opencv451)
+    set(OpenCV_INCLUDE_PATH ${OpenCV_DIR_ROOT}/include
+                            ${OpenCV_DIR_ROOT}/include/opencv4
+                            ${OpenCV_DIR_ROOT}/include/opencv4/opencv2)
     set(OpenCV_LIB_PATH ${OpenCV_DIR_ROOT}/lib)
 endif()
 
