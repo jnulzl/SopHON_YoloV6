@@ -2,7 +2,7 @@
 #include "Module_det.h"
 #include "Module_det_c_api.h"
 
-#include "rk356x/Module_det_rk356x_impl.h"
+#include "rk35xx/Module_det_rk35xx_impl.h"
 #include "debug.h"
 
 namespace rk35xx_det
@@ -22,9 +22,9 @@ namespace rk35xx_det
 #ifdef ALG_DEBUG
         AIALG_PRINT("release success begin\n");
 #endif
-        ANY_POINTER_CAST(impl_, CModule_det_impl)->deinit();
         if (ANY_POINTER_CAST(impl_, CModule_det_impl))
         {
+            ANY_POINTER_CAST(impl_, CModule_det_impl)->deinit();
             delete ANY_POINTER_CAST(impl_, CModule_det_impl);
         }
 #ifdef ALG_DEBUG

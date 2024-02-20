@@ -6,11 +6,9 @@
 
 namespace rk35xx_det
 {
-    CModule_det_impl::CModule_det_impl()
-    {}
+    CModule_det_impl::CModule_det_impl() = default;
 
-    CModule_det_impl::~CModule_det_impl()
-    {}
+    CModule_det_impl::~CModule_det_impl() = default;
 
     void CModule_det_impl::init(const YoloConfig &config)
     {
@@ -61,6 +59,7 @@ namespace rk35xx_det
 
         cv::Mat mat = cv::Mat(img_height_, img_width_, CV_8UC3, imageInfo.data, imageInfo.stride);
         cv::Mat des_tmp = *reinterpret_cast<cv::Mat *>(des_mat_);
+        memset(des_tmp.data, 0, des_tmp.total() * des_tmp.elemSize());
         cv::resize(mat, des_tmp(roi), cv::Size(roi_new_width_, roi_new_height_), 0, 0, cv::INTER_NEAREST);
         cv::cvtColor(des_tmp(roi), des_tmp(roi), cv::COLOR_BGR2RGB);
         src_resize_ptr_ = reinterpret_cast<cv::Mat *>(des_mat_)->data; //rgb
@@ -75,21 +74,21 @@ namespace rk35xx_det
         pre_process(imageInfos[0]);
 #ifdef ALG_DEBUG
         std::chrono::time_point<std::chrono::system_clock> end_time_nms = std::chrono::system_clock::now();
-        AIALG_PRINT("preprocess time %lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end_time_nms - begin_time_nms).count());
+        AIALG_PRINT("preprocess time %ld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end_time_nms - begin_time_nms).count());
 #endif
 
         engine_run();
 
 #ifdef ALG_DEBUG
         begin_time_nms = std::chrono::system_clock::now();
-        AIALG_PRINT("engine_run time %lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(begin_time_nms - end_time_nms).count());
+        AIALG_PRINT("engine_run time %ld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(begin_time_nms - end_time_nms).count());
 #endif
 
         post_process();
 
 #ifdef ALG_DEBUG
         end_time_nms = std::chrono::system_clock::now();
-        AIALG_PRINT("post_process time %lld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end_time_nms - begin_time_nms).count());
+        AIALG_PRINT("post_process time %ld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(end_time_nms - begin_time_nms).count());
 #endif
     }
 

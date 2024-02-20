@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
 #ifdef USE_RK3588
     config_tmp.device_id = std::atoi(argv[4]);
 #endif
-    config_tmp.conf_thres = 0.6;
+    config_tmp.conf_thres = 0.5;
     config_tmp.nms_thresh = 0.4;
 
     std::cout << "Loading rknn model from " << weights_path << std::endl;

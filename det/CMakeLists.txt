@@ -1,12 +1,14 @@
 file(GLOB _tmp ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 set(src_all ${src_all} ${_tmp})
 
-file(GLOB _tmp ${CMAKE_CURRENT_SOURCE_DIR}/${ENGINE_LOWER}/*.cpp)
+file(GLOB _tmp ${CMAKE_CURRENT_SOURCE_DIR}/rk35xx/*.cpp)
 set(src_all ${src_all} ${_tmp})
 
 if (BUILD_SHARED_LIBS)
     add_library(${DET_LIB_NAME} SHARED ${src_all})
-    set_target_properties(${DET_LIB_NAME} PROPERTIES SUFFIX .so.${GIT_HASH})
+    if("Linux" STREQUAL ${CMAKE_SYSTEM_NAME})
+        set_target_properties(${DET_LIB_NAME} PROPERTIES SUFFIX .so.${GIT_HASH})
+    endif()
 else()
     set(src_all ${src_all})
     add_library(${DET_LIB_NAME} STATIC ${src_all})
@@ -15,7 +17,7 @@ endif ()
 target_include_directories(${DET_LIB_NAME} PRIVATE
         ${PROJECT_SOURCE_DIR}/common
         ${CMAKE_CURRENT_SOURCE_DIR}
-        $<$<BOOL:${USE_${ENGINE_UPPER}}>:${CMAKE_CURRENT_SOURCE_DIR}/${ENGINE_LOWER}>
+        ${CMAKE_CURRENT_SOURCE_DIR}/rk35xx
         )
 
 target_compile_definitions(${DET_LIB_NAME} PRIVATE

@@ -59,8 +59,8 @@ void nms(BoxInfo *boxes, int *delete_obj_index, int num_box, int num_cls, float 
         }
         keep_indexs[(*num_keep)++] = i;
         // TODO:这两行应该可以删除
-        if (*num_keep >= MAX_DET_NUM)
-            break;
+//        if (*num_keep >= MAX_DET_NUM)
+//            break;
     }
 }
 
@@ -118,7 +118,7 @@ void non_max_suppression(float *src, int src_height, int src_width, float conf_t
 
 void nms_opt(BoxInfo* boxes, int* delete_obj_index, int num_box, int num_cls, float nms_thresh,
             int* keep_indexs, int* num_keep)
-{    
+{
     //qsort(boxes, num_box, sizeof(BoxInfo), cmpfunc);
     memset(delete_obj_index, 0, sizeof(int) * num_box);
 
@@ -161,8 +161,8 @@ void nms_opt(BoxInfo* boxes, int* delete_obj_index, int num_box, int num_cls, fl
         }
         keep_indexs[(*num_keep)++] = i;
         // TODO:这两行应该可以删除
-        if (*num_keep >= MAX_DET_NUM)
-            break;
+//        if (*num_keep >= MAX_DET_NUM)
+//            break;
     }
 }
 
