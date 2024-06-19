@@ -2,7 +2,9 @@
 // Created by lizhaoliang-os on 2020/6/9.
 //
 #include <algorithm>
-#include "opencv2/opencv.hpp"
+#include <numeric>
+#include <iterator>
+#include <string.h>
 #ifdef USE_RGA
     #include "rga.h"
 #endif
@@ -46,6 +48,22 @@ namespace rk35xx_det
             fclose(fp);
         }
         return model;
+    }
+
+    static void TopKIndex(const float* vec, int vec_len, int* topk_vec, int topk)
+    {
+        std::vector<size_t> vec_index(vec_len);
+        std::iota(vec_index.begin(), vec_index.end(), 0);
+
+        std::sort(vec_index.begin(), vec_index.end(),
+                  [&vec](size_t index_1, size_t index_2) { return vec[index_1] > vec[index_2]; });
+
+        int k_num = std::min<int>(vec_len, topk);
+
+        for (int idx = 0; idx < k_num; ++idx)
+        {
+            topk_vec[idx] = vec_index[idx];
+        }
     }
 
 #ifndef DET_USE_FLOAT_OUTPUT
@@ -120,32 +138,18 @@ namespace rk35xx_det
                                             int obj_num, int topk,
                                             std::vector<float> &topK_boxes_scores_labels)
     {
-        std::vector<bool> flag(obj_num, false);
+        std::vector<int> topKIndex(topk);
+        TopKIndex(scores, obj_num, topKIndex.data(), topk);
         for (int idx = 0; idx < topk; ++idx)
         {
-            float max_score = -1.0f;
-            int max_index = -1;
-            for (int idy = 0; idy < obj_num; ++idy)
-            {
-                if (flag[idy])
-                {
-                    continue;
-                }
-                float score_tmp = scores[idy];
-                if (score_tmp > max_score)
-                {
-                    max_score = score_tmp;
-                    max_index = idy;
-                }
-            }
+            int max_index = topKIndex[idx];
+            float max_score = scores[max_index];
             topK_boxes_scores_labels[6 * idx + 0] = boxes[4 * max_index + 0];
             topK_boxes_scores_labels[6 * idx + 1] = boxes[4 * max_index + 1];
             topK_boxes_scores_labels[6 * idx + 2] = boxes[4 * max_index + 2];
             topK_boxes_scores_labels[6 * idx + 3] = boxes[4 * max_index + 3];
             topK_boxes_scores_labels[6 * idx + 4] = max_score;
             topK_boxes_scores_labels[6 * idx + 5] = indexs[max_index];
-            flag[max_index] = true;
-//        scores[max_index] = -1.0f;
         }
     }
 

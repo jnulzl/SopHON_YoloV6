@@ -7,7 +7,7 @@
 
 #include <chrono>
 
-//#define ALG_DEBUG
+#define ALG_DEBUG
 
 #endif // ALG_DEBUG_H
 

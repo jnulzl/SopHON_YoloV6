@@ -2,17 +2,13 @@
 // Created by lizhaoliang-os on 2020/6/9.
 //
 #include <algorithm>
+#include <string.h>
 #include <vector>
 #include <numeric>
 #include <iterator>
-#include <cstring>
 #include "Module_det_rv1126_impl.h"
 #include "alg_define.h"
 #include "debug.h"
-
-#ifdef ALG_DEBUG
-#include "opencv2/opencv.hpp"
-#endif
 
 #ifdef USE_RGA
 #include "rga_func.h"
