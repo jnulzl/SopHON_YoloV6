@@ -50,7 +50,6 @@ else()
             opencv_imgproc
             opencv_imgcodecs
             opencv_video
-            opencv_videoio
             )
 endif()
 

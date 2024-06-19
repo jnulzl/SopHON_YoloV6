@@ -6,9 +6,7 @@
 #include <string>
 #include <chrono>
 
-#include "opencv2/core/core.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/imgcodecs/imgcodecs.hpp"
+#include "opencv2/opencv.hpp"
 
 #include "det/Module_det.h"
 #include "utils/file_process.hpp"
@@ -148,19 +146,18 @@ int main(int argc, char* argv[])
             cv::rectangle(frame, cv::Point2i(xmin, ymin), cv::Point2i(xmax, ymax), cv::Scalar(255, 0, 0), 2);
             if(config_tmp.num_cls > 25)
             {
-                cv::putText(frame, side_labels[label], cv::Point(xmin, ymin), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 0, 255), 2);
+                cv::putText(frame, std::to_string(label), cv::Point(xmin, ymin), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 0, 255), 2);
             }
             else
             {
-                cv::putText(frame, top_labels[label], cv::Point(xmin, ymin), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 0, 255), 2);
+                cv::putText(frame, std::to_string(label), cv::Point(xmin, ymin), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 0, 255), 2);
             }
             cv::putText(frame, std::to_string(score), cv::Point(xmax, ymin), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0, 255, 255), 2);
         }
 
         if (res[0].size > 0)
         {
-            cv::imwrite("res/video_" + std::to_string(0) + "_frame" + std::to_string(frame_id) +
-                        "_bs" + std::to_string(0) + "_obj" + std::to_string(res[0].size) + ".jpg", frame);
+            cv::imwrite("res/img_" + std::to_string(frame_id) + ".jpg", frame);
         }
         frame_id++;
     }

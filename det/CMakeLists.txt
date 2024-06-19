@@ -1,8 +1,13 @@
 file(GLOB _tmp ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 set(src_all ${src_all} ${_tmp})
 
-file(GLOB _tmp ${CMAKE_CURRENT_SOURCE_DIR}/rk35xx/*.cpp)
-set(src_all ${src_all} ${_tmp})
+if("RV1126" STREQUAL ${ENGINE_UPPER})
+    file(GLOB _tmp ${CMAKE_CURRENT_SOURCE_DIR}/rv1126/*.cpp)
+    set(src_all ${src_all} ${_tmp})
+else()
+    file(GLOB _tmp ${CMAKE_CURRENT_SOURCE_DIR}/rk35xx/*.cpp)
+    set(src_all ${src_all} ${_tmp})
+endif()
 
 if (BUILD_SHARED_LIBS)
     add_library(${DET_LIB_NAME} SHARED ${src_all})
@@ -47,7 +52,6 @@ else()
             opencv_imgproc
             opencv_imgcodecs
             opencv_video
-            opencv_videoio
             )
 endif()
 

@@ -82,11 +82,19 @@ if("Android" STREQUAL ${CMAKE_SYSTEM_NAME})
     set(OpenCV_INCLUDE_PATH ${OpenCV_INCLUDE_DIRS})
     set(OpenCV_LIB_PATH ${OpenCV_DIR_ROOT}/libs/${ANDROID_ABI})
 else()
-    set(OpenCV_DIR_ROOT ${THIRD_PARTY_ROOT}/opencv451)
-    set(OpenCV_INCLUDE_PATH ${OpenCV_DIR_ROOT}/include
-                            ${OpenCV_DIR_ROOT}/include/opencv4
-                            ${OpenCV_DIR_ROOT}/include/opencv4/opencv2)
-    set(OpenCV_LIB_PATH ${OpenCV_DIR_ROOT}/lib)
+    if("RV1126" STREQUAL ${ENGINE_UPPER})
+        set(OpenCV_DIR_ROOT ${THIRD_PARTY_ROOT}/RV1126/opencv455_armv7l)
+        set(OpenCV_INCLUDE_PATH ${OpenCV_DIR_ROOT}/include
+                ${OpenCV_DIR_ROOT}/include/opencv4
+                ${OpenCV_DIR_ROOT}/include/opencv4/opencv2)
+        set(OpenCV_LIB_PATH ${OpenCV_DIR_ROOT}/lib)
+    else()
+        set(OpenCV_DIR_ROOT ${THIRD_PARTY_ROOT}/opencv320)
+        set(OpenCV_INCLUDE_PATH ${OpenCV_DIR_ROOT}/include
+                ${OpenCV_DIR_ROOT}/include/opencv4
+                ${OpenCV_DIR_ROOT}/include/opencv4/opencv2)
+        set(OpenCV_LIB_PATH ${OpenCV_DIR_ROOT}/lib)
+    endif()
 endif()
 
 ##############RK35XX##############
@@ -96,9 +104,9 @@ set(RKNN_LIB_PATH ${RKNN_DIR}/lib/${SYSTEM_ABI})
 
 ##############RGA##############
 if(USE_RGA)
-    set(RGA_DIR ${THIRD_PARTY_ROOT}/${ENGINE_UPPER}/rga191/) # rga132 rga191
+    set(RGA_DIR ${THIRD_PARTY_ROOT}/../rga191) # rga132 rga191
     set(RGA_INCLUDE ${RGA_DIR}/include)
-    set(RGA_LIB_PATH ${RGA_DIR}/lib/${SYSTEM_ABI})
+    set(RGA_LIB_PATH ${RGA_DIR}/lib/${CMAKE_SYSTEM_NAME}/${SYSTEM_ABI})
 endif()
 
 ##############MPP##############

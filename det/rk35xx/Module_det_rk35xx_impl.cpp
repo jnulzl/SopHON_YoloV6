@@ -151,15 +151,9 @@ namespace rk35xx_det
 
 #endif
 
-    CModule_det_rk35xx_impl::CModule_det_rk35xx_impl()
-    {
+    CModule_det_rk35xx_impl::CModule_det_rk35xx_impl() = default;
 
-    }
-
-    CModule_det_rk35xx_impl::~CModule_det_rk35xx_impl()
-    {
-
-    }
+    CModule_det_rk35xx_impl::~CModule_det_rk35xx_impl() = default;
 
     void CModule_det_rk35xx_impl::engine_deinit()
     {

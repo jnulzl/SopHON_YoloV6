@@ -2,7 +2,11 @@
 #include "Module_det.h"
 #include "Module_det_c_api.h"
 
+#ifdef USE_RV1126
+#include "rv1126//Module_det_rv1126_impl.h"
+#else
 #include "rk35xx/Module_det_rk35xx_impl.h"
+#endif
 #include "debug.h"
 
 namespace rk35xx_det
@@ -13,7 +17,12 @@ namespace rk35xx_det
 
     void CModule_det::init(const YoloConfig &config)
     {
+#ifdef USE_RV1126
+        impl_ = new CModule_det_rv1126_impl();
+#else
         impl_ = new CModule_det_rk35xx_impl();
+#endif
+
         ANY_POINTER_CAST(impl_, CModule_det_impl)->init(config);
     }
 
@@ -42,6 +51,7 @@ namespace rk35xx_det
         return ANY_POINTER_CAST(impl_, CModule_det_impl)->get_result();
     }
 }
+
 ///************************* c api *************************/
 //void alg_det_init(Handle* handle, const net_config_tag_c* config)
 //{
