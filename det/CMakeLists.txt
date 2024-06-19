@@ -2,8 +2,10 @@ file(GLOB _tmp ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 set(src_all ${src_all} ${_tmp})
 
 if("RV1126" STREQUAL ${ENGINE_UPPER})
-    file(GLOB _tmp ${CMAKE_CURRENT_SOURCE_DIR}/rv1126/*.cpp)
-    set(src_all ${src_all} ${_tmp})
+    set(src_all ${src_all} ${CMAKE_CURRENT_SOURCE_DIR}/rv1126/Module_det_rv1126_impl.cpp)
+    if(USE_RGA)
+        set(src_all ${src_all} ${CMAKE_CURRENT_SOURCE_DIR}/rv1126/rga_func.cpp)
+    endif()
 else()
     file(GLOB _tmp ${CMAKE_CURRENT_SOURCE_DIR}/rk35xx/*.cpp)
     set(src_all ${src_all} ${_tmp})
@@ -22,7 +24,7 @@ endif ()
 target_include_directories(${DET_LIB_NAME} PRIVATE
         ${PROJECT_SOURCE_DIR}/common
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/rk35xx
+        ${CMAKE_CURRENT_SOURCE_DIR}/${ENGINE_LOWER}
         )
 
 target_compile_definitions(${DET_LIB_NAME} PRIVATE
@@ -56,5 +58,5 @@ else()
 endif()
 
 if(USE_RGA)
-    target_link_libraries(${DET_LIB_NAME} PRIVATE rga)
+    target_link_libraries(${DET_LIB_NAME} PRIVATE rga dl)
 endif()
