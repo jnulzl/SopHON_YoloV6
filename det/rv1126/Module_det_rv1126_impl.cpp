@@ -15,7 +15,7 @@
 #endif
 
 #ifdef USE_RGA
-#include "rga.h"
+#include "rga_func.h"
 #endif
 
 namespace rk35xx_det
@@ -185,6 +185,10 @@ namespace rk35xx_det
             free(model_buffer_);
         }
 
+#ifdef USE_RGA
+        RGA_deinit(&rga_ctx_);
+#endif
+
         // Destroy rknn memory
         if(ctx_ >= 0)
         {
@@ -197,13 +201,6 @@ namespace rk35xx_det
 
     void CModule_det_rv1126_impl::engine_init()
     {
-#ifdef USE_RGA
-        // init rga context
-        memset(&src_rect_, 0, sizeof(src_rect_));
-        memset(&dst_rect_, 0, sizeof(dst_rect_));
-        memset(&src_rga_buffer_, 0, sizeof(src_rga_buffer_));
-        memset(&dst_rga_buffer_, 0, sizeof(dst_rga_buffer_));
-#endif
         // Load RKNN Model
         int model_len = 0;
         model_buffer_ = load_model(config_.weights_path.c_str(), &model_len);
@@ -276,12 +273,6 @@ namespace rk35xx_det
         {
             inputs_mem_[i] = rknn_create_mem(ctx_, input_attrs_[i].size);
             rknn_set_io_mem(ctx_, inputs_mem_[0], &input_attrs_[0]);
-#ifdef USE_RGA
-            // 4.1.4 bind virtual address to rga virtual address
-            dst_rga_buffer_ = wrapbuffer_virtualaddr((void *)inputs_mem_[i]->virt_addr,
-                                                     config_.net_inp_width, config_.net_inp_height,
-                                                     RK_FORMAT_RGB_888);
-#endif
         }
 
         for (int i = 0; i < io_num.n_output; i++)
@@ -292,20 +283,20 @@ namespace rk35xx_det
             rknn_set_io_mem(ctx_, outputs_mem_[i], &output_attrs_[i]);
         }
 #endif
+
+#ifdef USE_RGA
+        memset(&rga_ctx_, 0, sizeof(rga_context));
+        RGA_init(&rga_ctx_);
+#endif
         std::printf("Init success!\n");
     }
 
     void CModule_det_rv1126_impl::pre_process(const ImageInfoUint8 &imageInfo)
     {
 #ifdef USE_RGA
-        /*--------------------------------pre_process with rga-----------------------------------*/
-        // https://github.com/rockchip-linux/rknpu2/blob/master/examples/rknn_yolov5_android_apk_demo/app/src/main/cpp/yolo_image.cc#L236
-        src_rga_buffer_ = wrapbuffer_virtualaddr((void*)imageInfo.data,
-                                                 imageInfo.img_width, imageInfo.img_height,
-                                                 RK_FORMAT_BGR_888); // wstride, hstride,
-
-        // https://github.com/airockchip/rknn_model_zoo/blob/main/models/CV/object_detection/yolo/RKNN_C_demo/yolo_utils/resize_function.cc#L113
-        // https://github.com/airockchip/rknn_model_zoo/blob/main/models/CV/object_detection/yolo/RKNN_C_demo/yolo_utils/resize_function.cc#L143
+#ifdef ALG_DEBUG
+        std::chrono::time_point<std::chrono::system_clock> begin_time_nms = std::chrono::system_clock::now();
+#endif
         if (img_width_ != imageInfo.img_width || img_height_ != imageInfo.img_height)
         {
             img_width_ = imageInfo.img_width;
@@ -315,39 +306,9 @@ namespace rk35xx_det
             roi_new_width_ = img_width_ * scale_wh;
             roi_new_height_ = img_height_ * scale_wh;
         }
-
-        im_rect src_rect;
-        src_rect.x = 0;
-        src_rect.y = 0;
-        src_rect.width = imageInfo.img_width;
-        src_rect.height = imageInfo.img_height;
-
-        im_rect dst_rect;
-        dst_rect.x = 0;
-        dst_rect.y = 0;
-        dst_rect.width = roi_new_width_;
-        dst_rect.height = roi_new_height_;
-
-        IM_STATUS ret = imcheck(src_rga_buffer_, dst_rga_buffer_, src_rect, dst_rect);
-        if (IM_STATUS_NOERROR != ret)
-        {
-            AIALG_PRINT("rga letter box resize check error!  %d\n", ret);
-            exit(-1);
-        }
-
-        ret = improcess(src_rga_buffer_, dst_rga_buffer_, {}, src_rect, dst_rect, {}, IM_SYNC);
-        if (IM_STATUS_SUCCESS != ret)
-        {
-            AIALG_PRINT("%s improcess failed, %s\n", "rga letter box resize", imStrError((IM_STATUS)ret));
-            exit(-1);
-        }
-
-//        ret = imcvtcolor(dst_rga_buffer_, dst_rga_buffer_, RK_FORMAT_BGR_888, RK_FORMAT_RGB_888);
-//        if (IM_STATUS_SUCCESS != ret)
-//        {
-//            AIALG_PRINT("%s imcvtcolor failed, %s\n", "rga letter box resize", imStrError((IM_STATUS)ret));
-//            exit(-1);
-//        }
+        rga_resize(&rga_ctx_, -1,
+                   imageInfo.data, 0, 0, imageInfo.img_width, imageInfo.img_height,imageInfo.img_width, imageInfo.img_height,
+                   inputs_mem_[0]->fd, nullptr, 0, 0, roi_new_width_, roi_new_height_, config_.net_inp_width, config_.net_inp_height);
 #else // RGA
         CModule_det_impl::pre_process(imageInfo);
 #ifdef ALG_DEBUG
@@ -445,7 +406,7 @@ namespace rk35xx_det
             float max_score;
             int max_index;
             getMaxValAndIn(score_index + idx * output_attrs_[1].dims[0], output_attrs_[1].dims[0],
-                           out_scales_[0], out_zps_[0],
+                           out_scales_[1], out_zps_[1],
                            max_score, max_index);
             max_scores_[idx] = max_score;
             max_indexs_[idx] = max_index;
@@ -455,13 +416,12 @@ namespace rk35xx_det
         AIALG_PRINT("getMaxValAndIn time %d ms\n", static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(end_time_nms - begin_time_nms).count()));
 #endif
         getTopKBoxesFromFloatOutput(pred_bboxes, max_indexs_.data(), max_scores_.data(),
-                                    out_scales_[1], out_zps_[1],
+                                    out_scales_[0], out_zps_[0],
                                     max_indexs_.size(), topK_, topK_boxes_scores_labels_);
 #ifdef ALG_DEBUG
         end_time = std::chrono::system_clock::now();
         AIALG_PRINT("post_process1111 time %d ms\n", static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(end_time - begin_time).count()));
 #endif
-
 #else // USE_ZERO_COPY
         const float *pred_bboxes = reinterpret_cast<const float *>(outputs_[0].buf);
         const float *score_index = reinterpret_cast<const float *>(outputs_[1].buf);

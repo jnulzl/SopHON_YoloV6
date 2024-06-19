@@ -9,7 +9,7 @@
 #include "rknn_api.h"
 
 #ifdef USE_RGA
-#include "im2d.h"
+#include "rga_func.h"
 #define USE_ZERO_COPY
 #endif
 
@@ -46,12 +46,10 @@ namespace rk35xx_det
         // for no zero copy
         std::vector<rknn_output> outputs_;
 #endif
-        // init rga context
+
 #ifdef USE_RGA
-        rga_buffer_t src_rga_buffer_;
-        rga_buffer_t dst_rga_buffer_;
-        im_rect src_rect_;
-        im_rect dst_rect_;
+        // init rga context
+        rga_context rga_ctx_;
 #endif
     };
 }
