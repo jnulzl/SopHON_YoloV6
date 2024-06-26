@@ -84,17 +84,15 @@ if("Android" STREQUAL ${CMAKE_SYSTEM_NAME})
 else()
     if("RV1126" STREQUAL ${ENGINE_UPPER})
         set(OpenCV_DIR_ROOT ${THIRD_PARTY_ROOT}/RV1126/opencv455_armv7l)
-        set(OpenCV_INCLUDE_PATH ${OpenCV_DIR_ROOT}/include
-                ${OpenCV_DIR_ROOT}/include/opencv4
-                ${OpenCV_DIR_ROOT}/include/opencv4/opencv2)
-        set(OpenCV_LIB_PATH ${OpenCV_DIR_ROOT}/lib)
+    elseif("RK3588" STREQUAL ${ENGINE_UPPER})
+        set(OpenCV_DIR_ROOT ${THIRD_PARTY_ROOT}/opencv451)
     else()
         set(OpenCV_DIR_ROOT ${THIRD_PARTY_ROOT}/opencv320)
-        set(OpenCV_INCLUDE_PATH ${OpenCV_DIR_ROOT}/include
-                ${OpenCV_DIR_ROOT}/include/opencv4
-                ${OpenCV_DIR_ROOT}/include/opencv4/opencv2)
-        set(OpenCV_LIB_PATH ${OpenCV_DIR_ROOT}/lib)
     endif()
+    set(OpenCV_INCLUDE_PATH ${OpenCV_DIR_ROOT}/include
+        ${OpenCV_DIR_ROOT}/include/opencv4
+        ${OpenCV_DIR_ROOT}/include/opencv4/opencv2)
+    set(OpenCV_LIB_PATH ${OpenCV_DIR_ROOT}/lib)
 endif()
 
 ##############RK35XX##############

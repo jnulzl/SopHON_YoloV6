@@ -1,4 +1,4 @@
-set(demo_src demo_det_images.cpp)
+set(demo_src demo_thread_top_side.cpp)
 get_filename_component(exe_name ${demo_src} NAME_WLE)
 
 add_executable(${exe_name} ${demo_src})
@@ -45,11 +45,13 @@ if("Android" STREQUAL ${CMAKE_SYSTEM_NAME})
             )
 else()
     target_link_libraries(${exe_name} PRIVATE
+            pthread
             opencv_core
             opencv_highgui
             opencv_imgproc
             opencv_imgcodecs
             opencv_video
+            opencv_videoio
             )
 endif()
 

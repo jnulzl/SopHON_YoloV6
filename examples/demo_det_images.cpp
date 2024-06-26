@@ -77,16 +77,17 @@ int main(int argc, char* argv[])
     config_tmp.anchor_grids = { {10, 13, 16, 30, 33, 23} , {30, 61, 62, 45, 59, 119}, {116, 90, 156, 198, 373, 326} };
 
     std::string project_root = "./";
-    if(argc < 6)
+    if(argc < 7)
     {
         std::cout << "Usage:\n\t "
-                  << argv[0] << " onnx_model_path input_size num_cls device_id image_list"
+                  << argv[0] << " onnx_model_path input_size num_cls device_id is_save_res image_list"
                   << std::endl;
         return -1;
     }
 
     std::string weights_path = std::string(argv[1]);
     int input_size = std::atoi(argv[2]);
+    bool is_save_res = std::atoi(argv[5]);
 
     /*******************det_obj******************/
     rk35xx_det::CModule_det det_obj;
@@ -107,7 +108,7 @@ int main(int argc, char* argv[])
     std::cout << "Loading rknn model end!" << std::endl;
 
     std::vector<std::string> img_list;
-    alg_utils::get_all_line_from_txt(argv[5], img_list);
+    alg_utils::get_all_line_from_txt(argv[6], img_list);
     
     long frame_id = 0;
     ImageInfoUint8 image_Info_Uint8;
@@ -134,30 +135,33 @@ int main(int argc, char* argv[])
 
         const BoxInfos* res = det_obj.get_result();
         std::cout << "Detected : " << res[0].size << " objects" << std::endl;
-        for (size_t idy = 0; idy < res[0].size; idy++)
+        if(1 == is_save_res)
         {
-            int xmin    = res[0].boxes[idy].x1;
-            int ymin    = res[0].boxes[idy].y1;
-            int xmax    = res[0].boxes[idy].x2;
-            int ymax    = res[0].boxes[idy].y2;
-            float score = res[0].boxes[idy].score;
-            int label   = res[0].boxes[idy].label;
-            std::cout << "xywh : " << xmin << " " << ymin << " " << xmax - xmin << " " << ymax - ymin << " " << score << " " << label << std::endl;
-            cv::rectangle(frame, cv::Point2i(xmin, ymin), cv::Point2i(xmax, ymax), cv::Scalar(255, 0, 0), 2);
-            if(config_tmp.num_cls > 25)
+            for (size_t idy = 0; idy < res[0].size; idy++)
             {
-                cv::putText(frame, std::to_string(label), cv::Point(xmin, ymin), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 0, 255), 2);
+                int xmin    = res[0].boxes[idy].x1;
+                int ymin    = res[0].boxes[idy].y1;
+                int xmax    = res[0].boxes[idy].x2;
+                int ymax    = res[0].boxes[idy].y2;
+                float score = res[0].boxes[idy].score;
+                int label   = res[0].boxes[idy].label;
+                std::cout << "xywh : " << xmin << " " << ymin << " " << xmax - xmin << " " << ymax - ymin << " " << score << " " << label << std::endl;
+                cv::rectangle(frame, cv::Point2i(xmin, ymin), cv::Point2i(xmax, ymax), cv::Scalar(255, 0, 0), 2);
+                if(config_tmp.num_cls > 25)
+                {
+                    cv::putText(frame, std::to_string(label), cv::Point(xmin, ymin), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 0, 255), 2);
+                }
+                else
+                {
+                    cv::putText(frame, std::to_string(label), cv::Point(xmin, ymin), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 0, 255), 2);
+                }
+                cv::putText(frame, std::to_string(score), cv::Point(xmax, ymin), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0, 255, 255), 2);
             }
-            else
-            {
-                cv::putText(frame, std::to_string(label), cv::Point(xmin, ymin), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 0, 255), 2);
-            }
-            cv::putText(frame, std::to_string(score), cv::Point(xmax, ymin), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0, 255, 255), 2);
-        }
 
-        if (res[0].size > 0)
-        {
-            cv::imwrite("res/img_" + std::to_string(frame_id) + ".jpg", frame);
+            if (res[0].size > 0)
+            {
+                cv::imwrite("res/img_" + std::to_string(frame_id) + ".jpg", frame);
+            }
         }
         frame_id++;
     }

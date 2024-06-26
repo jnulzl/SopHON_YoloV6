@@ -50,10 +50,8 @@ if("Android" STREQUAL ${CMAKE_SYSTEM_NAME})
 else()
     target_link_libraries(${DET_LIB_NAME} PRIVATE
             opencv_core
-            opencv_highgui
             opencv_imgproc
             opencv_imgcodecs
-            opencv_video
             )
 endif()
 
