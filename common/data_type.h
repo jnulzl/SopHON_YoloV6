@@ -27,7 +27,7 @@ struct BaseConfig
     int net_inp_width;
     int net_inp_height;
     int num_threads = 2;
-#if defined(USE_CUDA) || defined(USE_RK3588)
+#if defined(USE_CUDA) || defined(USE_RK3588) || defined(USE_BM1684X) || defined(USE_BM1684)
     int batch_size = 1;
     int device_id = 0;
 #ifdef USE_TENSORRT
@@ -41,6 +41,9 @@ struct BaseConfig
 
 struct YoloConfig : public BaseConfig
 {
+#if defined(USE_BM1684X) || defined(USE_BM1684)
+    void* handle;
+#endif
     int num_cls = 1;
     float conf_thres;
     float nms_thresh;

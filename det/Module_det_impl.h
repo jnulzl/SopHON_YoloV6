@@ -5,8 +5,10 @@
 #include <vector>
 #include "data_type.h"
 
-namespace rk35xx_det
+namespace bm1684x_det
 {
+    #define MAX_DET_NUM 16
+
     class CModule_det_impl
     {
     public:
@@ -22,6 +24,8 @@ namespace rk35xx_det
 
         const BoxInfos *get_result();
 
+        const YoloConfig* get_config() const;
+
     protected:
         virtual void engine_init() = 0;
 
@@ -29,7 +33,7 @@ namespace rk35xx_det
 
         virtual void engine_run() = 0;
 
-        virtual void pre_process(const ImageInfoUint8 &imageInfo);
+        virtual void pre_process(const ImageInfoUint8 *imageInfos, int batch_size);
 
         virtual void post_process();
 
@@ -39,17 +43,14 @@ namespace rk35xx_det
         std::vector<float> max_scores_;
         std::vector<float> max_indexs_;
         std::vector<int> keep_indexs_;
-        int img_height_;
-        int img_width_;
-        float roi_new_width_;
-        float roi_new_height_;
+        int topK_;
+
+        std::vector<int> img_heights_;
+        std::vector<int> img_widths_;
+        std::vector<int> frame_ids_;
 
         std::vector<BoxInfo> boxs_tmp_;
-        BoxInfos boxs_res_;
-
-        int topK_;
-        void *des_mat_;
-        uint8_t *src_resize_ptr_;
+        std::vector<BoxInfos> boxs_batch_;
     };
 }
 #endif // MODULE_DET_IMPL_H

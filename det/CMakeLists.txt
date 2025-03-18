@@ -1,15 +1,9 @@
+
 file(GLOB _tmp ${CMAKE_CURRENT_SOURCE_DIR}/*.cpp)
 set(src_all ${src_all} ${_tmp})
 
-if("RV1126" STREQUAL ${ENGINE_UPPER})
-    set(src_all ${src_all} ${CMAKE_CURRENT_SOURCE_DIR}/rv1126/Module_det_rv1126_impl.cpp)
-    if(USE_RGA)
-        set(src_all ${src_all} ${CMAKE_CURRENT_SOURCE_DIR}/rv1126/rga_func.cpp)
-    endif()
-else()
-    file(GLOB _tmp ${CMAKE_CURRENT_SOURCE_DIR}/rk35xx/*.cpp)
-    set(src_all ${src_all} ${_tmp})
-endif()
+file(GLOB _tmp ${CMAKE_CURRENT_SOURCE_DIR}/bm1684x/*.cpp)
+set(src_all ${src_all} ${_tmp})
 
 if (BUILD_SHARED_LIBS)
     add_library(${DET_LIB_NAME} SHARED ${src_all})
@@ -38,23 +32,8 @@ target_link_options(${DET_LIB_NAME} PRIVATE
         -Wl,--no-allow-shlib-undefined
         )
 
-target_link_libraries(${DET_LIB_NAME} PRIVATE
-        rknnrt
-#        -Wl,--whole-archive ${OpenCV_LIBS} -Wl,--no-whole-archive
+target_link_libraries(${DET_LIB_NAME} PUBLIC
+        pthread
+        ${BM_LIBS}
+        ${OPENCV_LIBS}
         )
-
-if("Android" STREQUAL ${CMAKE_SYSTEM_NAME})
-    target_link_libraries(${DET_LIB_NAME} PRIVATE
-            opencv_java4
-            )
-else()
-    target_link_libraries(${DET_LIB_NAME} PRIVATE
-            opencv_core
-            opencv_imgproc
-            opencv_imgcodecs
-            )
-endif()
-
-if(USE_RGA)
-    target_link_libraries(${DET_LIB_NAME} PRIVATE rga dl)
-endif()

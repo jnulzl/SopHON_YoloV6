@@ -7,7 +7,7 @@
 #include "data_type.h"
 #include "alg_define.h"
 
-namespace rk35xx_det
+namespace bm1684x_det
 {
     class AIALG_PUBLIC CModule_det
     {
@@ -23,6 +23,8 @@ namespace rk35xx_det
         void process_batch(const ImageInfoUint8 *imageInfos, int batch_size);
 
         const BoxInfos *get_result();
+
+        const YoloConfig* get_config() const;
 
     private:
         AW_ANY_POINTER impl_;

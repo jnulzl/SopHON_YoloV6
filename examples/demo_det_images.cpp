@@ -6,6 +6,9 @@
 #include <string>
 #include <chrono>
 
+#include "ff_decode.hpp"
+#include "bmnn_utils.h"
+
 #include "opencv2/opencv.hpp"
 
 #include "det/Module_det.h"
@@ -31,20 +34,6 @@ std::string trim(const std::string& str) {
     size_t right = str.find_last_not_of(' ');
     return str.substr(left, (right - left + 1));
 }
-
-const static std::vector<std::string> top_labels = {"cleaning", "dump", "heating", "imbedding", "put_off", "titrate",
-                                                    "wipe", "write", "paste_label", "stir", "write_label", "others"};
-
-const static std::vector<std::string> side_labels = {"alcohol_burner", "beaker", "catheter_plus", "centerMark",
-                                                "dishcloth", "distilled_water", "dropper", "erlenmeyer_flask",
-                                                "filter_paper_plus", "flame", "flume", "funnel", "gas_cylinder",
-                                                "glass_rod",
-                                                "glass_sheet", "glass_stopper", "graduated_cylinder",
-                                                "iron_support", "litmus", "long_neck_funnel", "marble",
-                                                "medicine_spoon", "ph_paper",
-                                                "reagent_bottles", "stopper", "tag", "test_color_card",
-                                                "test_tube", "test_tube_clamp",
-                                                "tweezers", "wooden_strips"};
 
 int main(int argc, char* argv[])
 {
@@ -77,74 +66,89 @@ int main(int argc, char* argv[])
     config_tmp.anchor_grids = { {10, 13, 16, 30, 33, 23} , {30, 61, 62, 45, 59, 119}, {116, 90, 156, 198, 373, 326} };
 
     std::string project_root = "./";
-    if(argc < 7)
+    if(argc < 8)
     {
         std::cout << "Usage:\n\t "
-                  << argv[0] << " onnx_model_path input_size num_cls device_id is_save_res image_list"
+                  << argv[0] << " onnx_model_path input_size num_cls device_id batch_size is_save_res image_list"
                   << std::endl;
         return -1;
     }
 
     std::string weights_path = std::string(argv[1]);
     int input_size = std::atoi(argv[2]);
-    bool is_save_res = std::atoi(argv[5]);
+    bool is_save_res = std::atoi(argv[6]);
 
     /*******************det_obj******************/
-    rk35xx_det::CModule_det det_obj;
+    bm1684x_det::CModule_det det_obj;
     config_tmp.input_names = input_names;
     config_tmp.output_names = output_names;
     config_tmp.weights_path = weights_path;
     config_tmp.net_inp_width = input_size;
     config_tmp.net_inp_height = config_tmp.net_inp_width;
     config_tmp.num_cls = std::atoi(argv[3]);
-#ifdef USE_RK3588
+#ifdef USE_BM1684X
     config_tmp.device_id = std::atoi(argv[4]);
+    config_tmp.batch_size = std::atoi(argv[5]);
 #endif
     config_tmp.conf_thres = 0.5;
     config_tmp.nms_thresh = 0.4;
 
-    std::cout << "Loading rknn model from " << weights_path << std::endl;
+    BMNNHandlePtr handle = std::make_shared<BMNNHandle>(config_tmp.device_id);
+    bm_handle_t bm_handle = handle->handle();
+    std::printf("bm_handle: %p\n", bm_handle);
+    config_tmp.handle = bm_handle;
+
+    std::cout << "Loading model from " << weights_path << std::endl;
     det_obj.init(config_tmp);
-    std::cout << "Loading rknn model end!" << std::endl;
+    std::cout << "Loading model end!" << std::endl;
 
     std::vector<std::string> img_list;
-    alg_utils::get_all_line_from_txt(argv[6], img_list);
-    
+    alg_utils::get_all_line_from_txt(argv[7], img_list);
+
     long frame_id = 0;
-    ImageInfoUint8 image_Info_Uint8;
-    for (int idx = 0; idx < img_list.size(); ++idx)
+    std::vector<ImageInfoUint8> image_Info_Uint8s(config_tmp.batch_size);
+    std::vector<bm_image> bmimgs(config_tmp.batch_size);
+
+    AIALG_PRINT("img_list.size():%d\n", img_list.size());
+    int batch_num = img_list.size() / config_tmp.batch_size;
+    for (int bs = 0; bs < batch_num; ++bs)
     {
-        std::string img_path = trim(img_list[idx]);
-        cv::Mat frame = cv::imread(img_path);
-        if (!frame.data)
+        for (int idx = 0; idx < config_tmp.batch_size; ++idx)
         {
-            break;
+            int kk = bs * config_tmp.batch_size + idx;
+            std::string img_path = trim(img_list[kk]);
+            AIALG_PRINT("img_path[%d]:%s\n", kk, img_path.c_str());
+            picDec(bm_handle, img_path.c_str(), bmimgs[idx]);
+            image_Info_Uint8s[idx].data = reinterpret_cast<uint8_t*>(bmimgs[idx].image_private);
+            image_Info_Uint8s[idx].img_height = bmimgs[idx].height;
+            image_Info_Uint8s[idx].img_width = bmimgs[idx].width;
+            image_Info_Uint8s[idx].is_device_data = 0;
+            image_Info_Uint8s[idx].stride = -1;
+            image_Info_Uint8s[idx].frame_id = frame_id;
+            frame_id++;
         }
-        image_Info_Uint8.data = frame.data;
-        image_Info_Uint8.img_height = frame.rows;
-        image_Info_Uint8.img_width = frame.cols;
-        image_Info_Uint8.is_device_data = 0;
-        image_Info_Uint8.stride = frame.step;
-        image_Info_Uint8.frame_id = frame_id;
-        image_Info_Uint8.img_data_type = InputDataType::IMG_BGR;
-
         std::chrono::time_point<std::chrono::system_clock> startTP = std::chrono::system_clock::now();
-        det_obj.process_batch(&image_Info_Uint8, 1);
+        det_obj.process_batch(image_Info_Uint8s.data(), image_Info_Uint8s.size());
         std::chrono::time_point<std::chrono::system_clock> finishTP1 = std::chrono::system_clock::now();
-        std::cout << "frame_id:" << frame_id << " Using RK356X all time = " << std::chrono::duration_cast<std::chrono::milliseconds>(finishTP1 - startTP).count() << " ms" << std::endl;
+        std::cout << "frame_id:" << frame_id << " Using all time = " << std::chrono::duration_cast<std::chrono::milliseconds>(finishTP1 - startTP).count() << " ms" << std::endl;
+    }
 
-        const BoxInfos* res = det_obj.get_result();
-        std::cout << "Detected : " << res[0].size << " objects" << std::endl;
-        if(1 == is_save_res)
+    const BoxInfos* res = det_obj.get_result();
+
+    if(1 == is_save_res)
+    {
+        for (int bs = 0; bs < config_tmp.batch_size; ++bs)
         {
-            for (size_t idy = 0; idy < res[0].size; idy++)
+            std::string img_path = trim(img_list[bs]);
+            cv::Mat frame = cv::imread(img_path);
+            for (size_t idy = 0; idy < res[bs].size; idy++)
             {
-                int xmin    = res[0].boxes[idy].x1;
-                int ymin    = res[0].boxes[idy].y1;
-                int xmax    = res[0].boxes[idy].x2;
-                int ymax    = res[0].boxes[idy].y2;
-                float score = res[0].boxes[idy].score;
-                int label   = res[0].boxes[idy].label;
+                int xmin    = res[bs].boxes[idy].x1;
+                int ymin    = res[bs].boxes[idy].y1;
+                int xmax    = res[bs].boxes[idy].x2;
+                int ymax    = res[bs].boxes[idy].y2;
+                float score = res[bs].boxes[idy].score;
+                int label   = res[bs].boxes[idy].label;
                 std::cout << "xywh : " << xmin << " " << ymin << " " << xmax - xmin << " " << ymax - ymin << " " << score << " " << label << std::endl;
                 cv::rectangle(frame, cv::Point2i(xmin, ymin), cv::Point2i(xmax, ymax), cv::Scalar(255, 0, 0), 2);
                 if(config_tmp.num_cls > 25)
@@ -158,12 +162,11 @@ int main(int argc, char* argv[])
                 cv::putText(frame, std::to_string(score), cv::Point(xmax, ymin), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0, 255, 255), 2);
             }
 
-            if (res[0].size > 0)
+            if (res[bs].size > 0)
             {
                 cv::imwrite("res/img_" + std::to_string(frame_id) + ".jpg", frame);
             }
         }
-        frame_id++;
     }
 
     det_obj.deinit();

@@ -1,4 +1,4 @@
-set(demo_src demo_thread_top_side.cpp)
+set(demo_src demo_det_images.cpp)
 get_filename_component(exe_name ${demo_src} NAME_WLE)
 
 add_executable(${exe_name} ${demo_src})
@@ -15,15 +15,18 @@ target_compile_definitions(${exe_name} PRIVATE
         $<$<BOOL:${USE_${DEVICE_UPPER}}>:USE_${DEVICE_UPPER}>
         )
 
-target_link_options(${exe_name} PRIVATE
-        -Wl,--no-undefined
-        -Wl,--no-allow-shlib-undefined
-        -Wl,--warn-unresolved-symbols
-        )
+#target_link_options(${exe_name} PRIVATE
+#        -Wl,--no-undefined
+#        -Wl,--no-allow-shlib-undefined
+#        -Wl,--warn-unresolved-symbols
+#        )
 
 if(BUILD_SHARED_LIBS)
     target_link_libraries(${exe_name} PRIVATE
             ${DET_LIB_NAME}
+            avcodec
+            avformat
+            avutil
             )
 else()
     target_link_libraries(${exe_name} PRIVATE
@@ -32,29 +35,4 @@ else()
     target_link_options(${exe_name} PRIVATE
             -Wl,--allow-multiple-definition
             )
-endif()
-
-target_link_libraries(${exe_name} PRIVATE
-        rknnrt
-#        ${OpenCV_LIBS}
-#        mpp
-)
-if("Android" STREQUAL ${CMAKE_SYSTEM_NAME})
-    target_link_libraries(${exe_name} PRIVATE
-            opencv_java4
-            )
-else()
-    target_link_libraries(${exe_name} PRIVATE
-            pthread
-            opencv_core
-            opencv_highgui
-            opencv_imgproc
-            opencv_imgcodecs
-            opencv_video
-            opencv_videoio
-            )
-endif()
-
-if(USE_RGA)
-    target_link_libraries(${exe_name} PRIVATE rga)
 endif()
