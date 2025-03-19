@@ -11,10 +11,20 @@
 #include "alg_define.h"
 #include "debug.h"
 
+#include <omp.h>
+
 #define USE_ASPECT_RATIO 1
 
 namespace bm1684x_det
 {
+    int arg_max(const float* vec, int vec_len) {
+        return static_cast<int>(std::distance(vec, std::max_element(vec, vec + vec_len)));
+    }
+
+    int arg_min(const float* vec, int vec_len) {
+        return static_cast<int>(std::distance(vec, std::min_element(vec, vec + vec_len)));
+    }
+
     static void TopKIndex(const float* vec, int vec_len, int* topk_vec, int topk)
     {
         std::vector<size_t> vec_index(vec_len);
@@ -33,16 +43,8 @@ namespace bm1684x_det
 
     static void getMaxValAndIn(const float* data, int data_len, float& max_val, int& max_index)
     {
-        max_val = -1.0e6;
-        max_index = -1;
-        for (int idx = 0; idx < data_len; idx++)
-        {
-            if (data[idx] > max_val)
-            {
-                max_val = data[idx];
-                max_index = idx;
-            }
-        }
+        max_index = arg_max(data, data_len);
+        max_val = data[max_index];
     }
 
     static void getTopKBoxesFromFloatOutput(const float *boxes, const float *indexs, const float *scores,
@@ -54,12 +56,11 @@ namespace bm1684x_det
         for (int idx = 0; idx < topk; ++idx)
         {
             int max_index = topKIndex[idx];
-            float max_score = scores[max_index];
             topK_boxes_scores_labels[6 * idx + 0] = boxes[4 * max_index + 0];
             topK_boxes_scores_labels[6 * idx + 1] = boxes[4 * max_index + 1];
             topK_boxes_scores_labels[6 * idx + 2] = boxes[4 * max_index + 2];
             topK_boxes_scores_labels[6 * idx + 3] = boxes[4 * max_index + 3];
-            topK_boxes_scores_labels[6 * idx + 4] = max_score;
+            topK_boxes_scores_labels[6 * idx + 4] = scores[max_index];
             topK_boxes_scores_labels[6 * idx + 5] = indexs[max_index];
         }
     }
@@ -162,8 +163,12 @@ namespace bm1684x_det
 
     void CModule_det_bm1684x_impl::pre_process(const ImageInfoUint8 *imageInfos, int batch_size)
     {
+        #pragma omp parallel for // num_threads(batch_size)
         for(int i = 0; i < batch_size; ++i)
         {
+#ifdef ALG_DEBUG
+            printf("i = %d, I am Thread %d, total thread num : %d\n", i, omp_get_thread_num(), omp_get_num_threads());
+#endif
             bm_image image_tmp;
             convert_image_info_to_bm_image(&imageInfos[i], &image_tmp);
             bm_image image_aligned;
@@ -193,7 +198,7 @@ namespace bm1684x_det
             bool isAlignWidth = false;
             float ratio = get_aspect_scaled_ratio(image_tmp.width, image_tmp.height, m_net_w_, m_net_h_, &isAlignWidth);
             bmcv_padding_atrr_t padding_attr;
-            memset(&padding_attr, 0, sizeof(padding_attr));
+            //memset(&padding_attr, 0, sizeof(padding_attr));
             padding_attr.dst_crop_sty = 0;
             padding_attr.dst_crop_stx = 0;
             padding_attr.padding_b = 114;
@@ -243,9 +248,9 @@ namespace bm1684x_det
         }
 
         std::shared_ptr<BMNNTensor> input_tensor = m_bmNetwork_->inputTensor(0);
-        //2. converto
-        auto ret = bmcv_image_convert_to(m_bmContext_->handle(), batch_size, m_converto_attr_, m_resized_imgs_.data(), m_converto_imgs_.data());
-        assert(ret == 0);
+//        //2. converto
+//        auto ret = bmcv_image_convert_to(m_bmContext_->handle(), batch_size, m_converto_attr_, m_resized_imgs_.data(), m_converto_imgs_.data()); // uesless when model_transform --fuse_preprocess
+//        assert(ret == 0);
 
         //3. attach to tensor
         //assert(batch_size == m_max_batch_)
@@ -254,7 +259,7 @@ namespace bm1684x_det
             batch_size = m_bmNetwork_->get_nearest_batch(batch_size);
         }
         bm_device_mem_t input_dev_mem;
-        bm_image_get_contiguous_device_mem(batch_size, m_converto_imgs_.data(), &input_dev_mem);
+        bm_image_get_contiguous_device_mem(batch_size, m_resized_imgs_.data(), &input_dev_mem);
         input_tensor->set_device_mem(&input_dev_mem);
         input_tensor->set_shape_by_dim(0, batch_size);  // set real batch number
     }
@@ -302,6 +307,7 @@ namespace bm1684x_det
         }
         const float *pred_bboxes = reinterpret_cast<const float *>(outputTensors[0]->get_cpu_data());
         const float *score_index = reinterpret_cast<const float *>(outputTensors[1]->get_cpu_data());
+        #pragma omp parallel for // num_threads(batch_size)
         for (int bs = 0; bs < batch_size; ++bs)
         {
             for (int idx = 0; idx < middle_dim; ++idx)
@@ -316,16 +322,6 @@ namespace bm1684x_det
                                         max_indexs_.data() + bs * middle_dim,
                                         max_scores_.data() + bs * middle_dim,
                                         middle_dim, topK_, topK_boxes_scores_labels_.data() + bs * topK_ * 6);
-//            for (int idx = 0; idx < topK_; ++idx)
-//            {
-//                printf("%.4f, %.4f, %.4f, %.4f, %d, %.4f\n",
-//                       topK_boxes_scores_labels_[bs * topK_ * 6 + idx * 6 + 0],
-//                       topK_boxes_scores_labels_[bs * topK_ * 6 + idx * 6 + 1],
-//                       topK_boxes_scores_labels_[bs * topK_ * 6 + idx * 6 + 2],
-//                       topK_boxes_scores_labels_[bs * topK_ * 6 + idx * 6 + 3],
-//                       static_cast<int>(topK_boxes_scores_labels_[bs * topK_ * 6 + idx * 6 + 4]),
-//                       topK_boxes_scores_labels_[bs * topK_ * 6 + idx * 6 + 5]);
-//            }
         }
 
 #ifdef ALG_DEBUG

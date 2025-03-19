@@ -164,7 +164,7 @@ int main(int argc, char* argv[])
 
             if (res[bs].size > 0)
             {
-                cv::imwrite("res/img_" + std::to_string(frame_id) + ".jpg", frame);
+                cv::imwrite("res/img_" + std::to_string(bs) + ".jpg", frame);
             }
         }
     }
