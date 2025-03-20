@@ -31,16 +31,15 @@ namespace bm1684x_det
         virtual void pre_process(const ImageInfoUint8 *imageInfos, int batch_size) override;
 
     private:
-        void convert_image_info_to_bm_image(const ImageInfoUint8 *img_info, bm_image *bm_img);
+        static void convert_image_info_to_bm_image(const ImageInfoUint8 *img_info, bm_image *bm_img);
 
-        float get_aspect_scaled_ratio(int src_w, int src_h, int dst_w, int dst_h, bool *pIsAligWidth);
+        static float get_aspect_scaled_ratio(int src_w, int src_h, int dst_w, int dst_h, bool *pIsAligWidth);
 
     private:
         BMNNHandlePtr m_handle_;
         std::shared_ptr<BMNNContext> m_bmContext_;
         std::shared_ptr<BMNNNetwork> m_bmNetwork_;
         std::vector<bm_image> m_resized_imgs_;
-        std::vector<bm_image> m_converto_imgs_;
 
         int m_net_h_;
         int m_net_w_;

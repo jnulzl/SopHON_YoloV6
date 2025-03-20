@@ -100,10 +100,8 @@ namespace bm1684x_det
         AIALG_PRINT("release success begin\n");
 #endif
         bm_image_free_contiguous_mem(m_max_batch_, m_resized_imgs_.data());
-        bm_image_free_contiguous_mem(m_max_batch_, m_converto_imgs_.data());
         for(int idx = 0; idx < m_max_batch_; idx++)
         {
-            bm_image_destroy(m_converto_imgs_[idx]);
             bm_image_destroy(m_resized_imgs_[idx]);
         }
 #ifdef ALG_DEBUG
@@ -133,7 +131,6 @@ namespace bm1684x_det
 
         //4. initialize bmimages
         m_resized_imgs_.resize(m_max_batch_);
-        m_converto_imgs_.resize(m_max_batch_);
         // some API only accept bm_image whose stride is aligned to 64
         int aligned_net_w = FFALIGN(m_net_w_, 64);
         int strides[3] = {aligned_net_w, aligned_net_w, aligned_net_w};
@@ -143,12 +140,6 @@ namespace bm1684x_det
             assert(BM_SUCCESS == ret);
         }
         bm_image_alloc_contiguous_mem(m_max_batch_, m_resized_imgs_.data());
-        m_img_dtype_ = DATA_TYPE_EXT_FLOAT32;
-        if (tensor->get_dtype() == BM_INT8){
-            m_img_dtype_ = DATA_TYPE_EXT_1N_BYTE_SIGNED;
-        }
-        auto ret = bm_image_create_batch(m_bmContext_->handle(), m_net_h_, m_net_w_, FORMAT_RGB_PLANAR, m_img_dtype_, m_converto_imgs_.data(), m_max_batch_);
-        assert(BM_SUCCESS == ret);
 
         // 5.converto
         float input_scale = tensor->get_scale();
@@ -248,10 +239,6 @@ namespace bm1684x_det
         }
 
         std::shared_ptr<BMNNTensor> input_tensor = m_bmNetwork_->inputTensor(0);
-//        //2. converto
-//        auto ret = bmcv_image_convert_to(m_bmContext_->handle(), batch_size, m_converto_attr_, m_resized_imgs_.data(), m_converto_imgs_.data()); // uesless when model_transform --fuse_preprocess
-//        assert(ret == 0);
-
         //3. attach to tensor
         //assert(batch_size == m_max_batch_)
         if(batch_size != m_max_batch_)
