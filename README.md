@@ -1,4 +1,4 @@
-# ONNX模型RK35XX平台部署(以yolov6为例)
+# ONNX模型SOPHON平台部署(以yolov6为例)
 
 
 ## 环境配置
@@ -7,26 +7,25 @@
 
 - cmake, git, make等等,根据实际情况缺什么安装什么
 
-- OpenCV 4.8.0
+- [23.09 LTS SP4](https://sophon-assets.sophon.cn/sophon-prod-s3/drive/24/12/31/10/SDK-23.09-LTS-SP4.zip)
 
-- [rknn-toolkit2](https://github.com/rockchip-linux/rknn-toolkit2)
+- `yolov6 4.0`
 
-- [rknpu2](https://github.com/rockchip-linux/rknpu2)
+  ![yolov6_header](E:\BITMain\Codes\Det_SOPHON\imgs\yolov6_header.jpg)
 
-- [android-ndk-r25c-linux](https://dl.google.com/android/repository/android-ndk-r25c-linux.zip)
-
-- [third_party](https://gitlab.malong.com/lizhaoliang/third_party)
-
-## 模型量化
-
-见[rknn-toolkit2-onnx-yolov5](https://github.com/rockchip-linux/rknn-toolkit2/tree/master/examples/onnx/yolov5)
 
 ## 构建
 
 ```shell
 cd $ROOT_DIR
 mkdir build && cd build
-export ANDROID_NDK='YOUR ANDROID_NDK ROOT'
-cmake ../ -DCMAKE_BUILD_TYPE=Release -DENGINE_LOWER=rk356x -DCMAKE_SYSTEM_NAME=Android -DANDROID_ABI=arm64-v8a -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake
+cmake ../ -DCMAKE_BUILD_TYPE=Release-DENGINE_LOWER=bm1684x -DCMAKE_SYSTEM_NAME=Linux -DSYSTEM_ABI=aarch64 -DCMAKE_CXX_COMPILER=/usr/bin/aarch64-linux-gnu-g++ -DCMAKE_C_COMPILER=/usr/bin/aarch64-linux-gnu-gcc
 ```
 输出产物在`ROOT_DIR/bin/Linux`下面，拷贝到板子跑即可。
+
+
+## 参考资料
+
+- [YOLOv5_fuse](https://github.com/sophgo/sophon-demo/blob/release/sample/YOLOv5_fuse)
+
+- [sophgo SDK文档](https://developer.sophgo.com/site/index/material/all/all.html)
