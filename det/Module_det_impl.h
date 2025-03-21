@@ -40,8 +40,6 @@ namespace bm1684x_det
     protected:
         YoloConfig config_;
         std::vector<float> topK_boxes_scores_labels_;
-        std::vector<float> max_scores_;
-        std::vector<float> max_indexs_;
         std::vector<int> keep_indexs_;
         int topK_;
 

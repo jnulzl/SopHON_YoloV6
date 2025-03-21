@@ -127,7 +127,7 @@ namespace bm1684x_det
 
         //3. get output
         m_output_num_ = m_bmNetwork_->outputTensorNum();
-        assert(output_num == 1 || output_num == 2);
+        assert(output_num == 1 || output_num == 2 || output_num == 3);
 
         //4. initialize bmimages
         m_resized_imgs_.resize(m_max_batch_);
@@ -274,43 +274,23 @@ namespace bm1684x_det
         }
         int batch_size = outputTensors[1]->get_shape()->dims[0];
         int middle_dim = outputTensors[1]->get_shape()->dims[1];
-        int num_cls = outputTensors[1]->get_shape()->dims[2];
 
         size_t elem_num = batch_size * topK_ * 6;
         if (topK_boxes_scores_labels_.size() < elem_num)
         {
             topK_boxes_scores_labels_.resize(elem_num);
         }
-//        AIALG_PRINT("batch_size=%d, middle_dim=%d, num_cls=%d\n", batch_size, middle_dim, num_cls);
-        size_t elem_num2 = batch_size * middle_dim; // batch * 8400(for 640 x 640 input)
-        if (max_scores_.empty())
-        {
-            max_scores_.resize( elem_num2);
-        }
-
-        if (max_indexs_.empty())
-        {
-            max_indexs_.resize(elem_num2);
-        }
         const float *pred_bboxes = reinterpret_cast<const float *>(outputTensors[0]->get_cpu_data());
-        const float *score_index = reinterpret_cast<const float *>(outputTensors[1]->get_cpu_data());
+        const float* max_scores = reinterpret_cast<const float *>(outputTensors[1]->get_cpu_data());
+        const float* max_indexs = reinterpret_cast<const float *>(outputTensors[2]->get_cpu_data());
         #pragma omp parallel for // num_threads(batch_size)
         for (int bs = 0; bs < batch_size; ++bs)
         {
-            for (int idx = 0; idx < middle_dim; ++idx)
-            {
-                float max_score;
-                int max_index;
-                getMaxValAndIn(score_index + bs * (middle_dim * num_cls) + idx * num_cls, num_cls, max_score, max_index);
-                max_scores_[bs * middle_dim + idx] = max_score;
-                max_indexs_[bs * middle_dim + idx] = max_index;
-            }
             getTopKBoxesFromFloatOutput(pred_bboxes + bs * (middle_dim * 4),
-                                        max_indexs_.data() + bs * middle_dim,
-                                        max_scores_.data() + bs * middle_dim,
+                                        max_indexs + bs * middle_dim,
+                                        max_scores + bs * middle_dim,
                                         middle_dim, topK_, topK_boxes_scores_labels_.data() + bs * topK_ * 6);
         }
-
 #ifdef ALG_DEBUG
         std::chrono::time_point<std::chrono::system_clock> begin_time_nms = std::chrono::system_clock::now();
         AIALG_PRINT("Postprocess0 time %ld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(begin_time_nms - end_time).count());

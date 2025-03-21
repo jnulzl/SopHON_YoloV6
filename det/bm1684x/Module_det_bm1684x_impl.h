@@ -47,7 +47,6 @@ namespace bm1684x_det
         int m_output_num_;
 
         bmcv_convert_to_attr m_converto_attr_;
-        bm_image_data_format_ext m_img_dtype_;
 
         std::vector<float> out_scales_;
         std::vector<int32_t> out_zps_;
