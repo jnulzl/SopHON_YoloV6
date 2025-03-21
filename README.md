@@ -9,10 +9,20 @@
 
 - [23.09 LTS SP4](https://sophon-assets.sophon.cn/sophon-prod-s3/drive/24/12/31/10/SDK-23.09-LTS-SP4.zip)
 
+- [third_party&dependencies]()
+
 - `yolov6 4.0`
 
   ![yolov6_header](imgs/yolov6_header.jpg)
 
+## 工程结构
+
+```
+.
+├── SopHON_YoloV6
+├── dependencies
+├── third_party
+```
 
 ## 构建
 
