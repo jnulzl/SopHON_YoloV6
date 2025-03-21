@@ -46,7 +46,8 @@ int main(int argc, char* argv[])
 
     output_names.clear();
     output_names.emplace_back("pred_bboxes");
-    output_names.emplace_back("max_scores");
+    output_names.emplace_back("topk_scores");
+    output_names.emplace_back("topk_index");
     output_names.emplace_back("max_index");
 
     YoloConfig config_tmp;

@@ -65,6 +65,22 @@ namespace bm1684x_det
         }
     }
 
+    static void getTopKBoxesFromTopKFloatOutput(const float *boxes, const float *max_indexs, const float *topK_indexs, const float *topK_scores,
+                                            int obj_num, int topk,
+                                            float* topK_boxes_scores_labels)
+    {
+        for (int idx = 0; idx < topk; ++idx)
+        {
+            int max_index = static_cast<int>(topK_indexs[idx]);
+            topK_boxes_scores_labels[6 * idx + 0] = boxes[4 * max_index + 0];
+            topK_boxes_scores_labels[6 * idx + 1] = boxes[4 * max_index + 1];
+            topK_boxes_scores_labels[6 * idx + 2] = boxes[4 * max_index + 2];
+            topK_boxes_scores_labels[6 * idx + 3] = boxes[4 * max_index + 3];
+            topK_boxes_scores_labels[6 * idx + 4] = topK_scores[idx];
+            topK_boxes_scores_labels[6 * idx + 5] = max_indexs[max_index];
+        }
+    }
+
     float CModule_det_bm1684x_impl::get_aspect_scaled_ratio(int src_w, int src_h, int dst_w, int dst_h, bool *pIsAligWidth)
     {
         float ratio;
@@ -127,7 +143,7 @@ namespace bm1684x_det
 
         //3. get output
         m_output_num_ = m_bmNetwork_->outputTensorNum();
-        assert(output_num == 1 || output_num == 2 || output_num == 3);
+        assert(output_num == 1 || output_num == 2 || output_num == 3 || output_num == 4);
 
         //4. initialize bmimages
         m_resized_imgs_.resize(m_max_batch_);
@@ -272,8 +288,8 @@ namespace bm1684x_det
         {
             outputTensors[idx] = m_bmNetwork_->outputTensor(idx);
         }
-        int batch_size = outputTensors[1]->get_shape()->dims[0];
-        int middle_dim = outputTensors[1]->get_shape()->dims[1];
+        int batch_size = outputTensors[0]->get_shape()->dims[0];
+        int middle_dim = outputTensors[0]->get_shape()->dims[1];
 
         size_t elem_num = batch_size * topK_ * 6;
         if (topK_boxes_scores_labels_.size() < elem_num)
@@ -281,14 +297,16 @@ namespace bm1684x_det
             topK_boxes_scores_labels_.resize(elem_num);
         }
         const float *pred_bboxes = reinterpret_cast<const float *>(outputTensors[0]->get_cpu_data());
-        const float* max_scores = reinterpret_cast<const float *>(outputTensors[1]->get_cpu_data());
-        const float* max_indexs = reinterpret_cast<const float *>(outputTensors[2]->get_cpu_data());
+        const float* topK_scores = reinterpret_cast<const float *>(outputTensors[1]->get_cpu_data());
+        const float* topK_indexs = reinterpret_cast<const float *>(outputTensors[2]->get_cpu_data());
+        const float* max_indexs = reinterpret_cast<const float *>(outputTensors[3]->get_cpu_data());
         #pragma omp parallel for // num_threads(batch_size)
         for (int bs = 0; bs < batch_size; ++bs)
         {
-            getTopKBoxesFromFloatOutput(pred_bboxes + bs * (middle_dim * 4),
-                                        max_indexs + bs * middle_dim,
-                                        max_scores + bs * middle_dim,
+            getTopKBoxesFromTopKFloatOutput(pred_bboxes + bs * (middle_dim * 4),
+                                            max_indexs + bs * middle_dim,
+                                        topK_indexs + bs * topK_,
+                                        topK_scores + bs * topK_,
                                         middle_dim, topK_, topK_boxes_scores_labels_.data() + bs * topK_ * 6);
         }
 #ifdef ALG_DEBUG
