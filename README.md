@@ -9,7 +9,7 @@
 
 - [23.09 LTS SP4](https://sophon-assets.sophon.cn/sophon-prod-s3/drive/24/12/31/10/SDK-23.09-LTS-SP4.zip)
 
-- [third_party&dependencies]()
+- [third_party&dependencies](https://pan.baidu.com/s/10V4dOLx2nzG2XJhnXD5PxQ?pwd=2jgi)
 
 - `yolov6 4.0`
 
