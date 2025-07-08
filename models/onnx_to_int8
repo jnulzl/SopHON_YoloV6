@@ -1,0 +1,21 @@
+input=$1
+model_prefix=${input%.*}
+
+batch_size=$2
+input_size=$3
+
+data_path=$4
+data_num=$5
+
+new_input=${model_prefix}_bs${batch_size}.onnx
+new_model_prefix=${new_input%.*}
+
+cp $1 ${new_input}
+
+echo ./onnx_to_mlir ${new_input} ${batch_size} ${input_size}
+./onnx_to_mlir ${new_input} ${batch_size} ${input_size}
+ 
+echo ./mlir_to_int8 ${new_model_prefix}.mlir ${data_path} ${data_num}
+./mlir_to_int8 ${new_model_prefix}.mlir ${data_path} ${data_num}
+
+rm ${new_input}

@@ -3,3 +3,7 @@ build*
 cmake-*
 third_party
 bin
+
+models/__pycache__
+models/top_index_cast_tmp.onnx
+models/max_index_cast_tmp.onnx 

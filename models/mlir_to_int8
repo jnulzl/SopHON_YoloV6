@@ -1,0 +1,22 @@
+input=$1
+model_prefix=${input%.*}
+# run_calibration yolov5s.mlir --dataset ../COCO2017 --input_num 100 -o yolov5s_cali_table
+echo run_calibration $1 --dataset $2 --input_num $3 -o ${model_prefix}_cali_table
+run_calibration $1 --dataset $2 --input_num $3 -o ${model_prefix}_cali_table
+
+echo model_deploy --mlir $1 --quantize INT8 --calibration_table ${model_prefix}_cali_table --fuse_preprocess --processor bm1684x --tolerance 0.85,0.45 --model ${model_prefix}_1684x_int8_sym_fuse.bmodel
+model_deploy --mlir $1 --quantize INT8 --calibration_table ${model_prefix}_cali_table --fuse_preprocess --processor bm1684x --tolerance 0.85,0.45 --model ${model_prefix}_1684x_int8_sym_fuse.bmodel
+
+rm ${model_prefix}_top_f32_all_weight.npz
+rm ${model_prefix}.mlir
+rm ${model_prefix}_cali_table
+rm ${model_prefix}*_int8_sym*.json
+rm ${model_prefix}*_int8.layer_group_cache.json
+rm ${model_prefix}*_int8_sym*final.mlir
+rm ${model_prefix}*_int8_sym*tpu.mlir
+rm ${model_prefix}_tpu_addressed*_int8_sym_weight.npz
+rm ${model_prefix}*_int8_sym*net_0.profile
+rm ${model_prefix}*_int8_sym*compiler_profile_0.txt
+rm -rf ${model_prefix}*_int8_sym_fuse
+rm ${model_prefix}*_shape_ops
+rm group_before.txt
