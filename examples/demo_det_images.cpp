@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
     std::vector<ImageInfoUint8> image_Info_Uint8s(config_tmp.batch_size);
     std::vector<bm_image> bmimgs(config_tmp.batch_size);
 
-    AIALG_PRINT("img_list.size():%d\n", img_list.size());
+    AIALG_PRINT("img_list.size():%ld\n", img_list.size());
     int batch_num = img_list.size() / config_tmp.batch_size;
     for (int bs = 0; bs < batch_num; ++bs)
     {
@@ -133,40 +133,34 @@ int main(int argc, char* argv[])
         det_obj.process_batch(image_Info_Uint8s.data(), image_Info_Uint8s.size());
         std::chrono::time_point<std::chrono::system_clock> finishTP1 = std::chrono::system_clock::now();
         std::cout << "frame_id:" << frame_id << " Using all time = " << std::chrono::duration_cast<std::chrono::milliseconds>(finishTP1 - startTP).count() << " ms" << std::endl;
-    }
 
-    const BoxInfos* res = det_obj.get_result();
+        const BoxInfos* res = det_obj.get_result();
 
-    if(1 == is_save_res)
-    {
-        for (int bs = 0; bs < config_tmp.batch_size; ++bs)
+        if(1 == is_save_res)
         {
-            std::string img_path = trim(img_list[bs]);
-            cv::Mat frame = cv::imread(img_path);
-            for (size_t idy = 0; idy < res[bs].size; idy++)
+            for (int idx = 0; idx < config_tmp.batch_size; ++idx)
             {
-                int xmin    = res[bs].boxes[idy].x1;
-                int ymin    = res[bs].boxes[idy].y1;
-                int xmax    = res[bs].boxes[idy].x2;
-                int ymax    = res[bs].boxes[idy].y2;
-                float score = res[bs].boxes[idy].score;
-                int label   = res[bs].boxes[idy].label;
-                std::cout << "xywh : " << xmin << " " << ymin << " " << xmax - xmin << " " << ymax - ymin << " " << score << " " << label << std::endl;
-                cv::rectangle(frame, cv::Point2i(xmin, ymin), cv::Point2i(xmax, ymax), cv::Scalar(255, 0, 0), 2);
-                if(config_tmp.num_cls > 25)
+                int kk = bs * config_tmp.batch_size + idx;
+                std::string img_path = trim(img_list[kk]);
+                cv::Mat frame = cv::imread(img_path);
+                for (size_t idy = 0; idy < res[idx].size; idy++)
                 {
+                    int xmin    = res[idx].boxes[idy].x1;
+                    int ymin    = res[idx].boxes[idy].y1;
+                    int xmax    = res[idx].boxes[idy].x2;
+                    int ymax    = res[idx].boxes[idy].y2;
+                    float score = res[idx].boxes[idy].score;
+                    int label   = res[idx].boxes[idy].label;
+                    std::cout << "xywh : " << xmin << " " << ymin << " " << xmax - xmin << " " << ymax - ymin << " " << score << " " << label << std::endl;
+                    cv::rectangle(frame, cv::Point2i(xmin, ymin), cv::Point2i(xmax, ymax), cv::Scalar(255, 0, 0), 2);
                     cv::putText(frame, std::to_string(label), cv::Point(xmin, ymin), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 0, 255), 2);
+                    cv::putText(frame, std::to_string(score), cv::Point(xmax, ymin), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0, 255, 255), 2);
                 }
-                else
-                {
-                    cv::putText(frame, std::to_string(label), cv::Point(xmin, ymin), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(255, 0, 255), 2);
-                }
-                cv::putText(frame, std::to_string(score), cv::Point(xmax, ymin), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0, 255, 255), 2);
-            }
 
-            if (res[bs].size > 0)
-            {
-                cv::imwrite("res/img_" + std::to_string(bs) + ".jpg", frame);
+                if (res[idx].size > 0)
+                {
+                    cv::imwrite("res/img_" + std::to_string(kk) + ".jpg", frame);
+                }
             }
         }
     }
