@@ -163,6 +163,12 @@ int main(int argc, char* argv[])
                 }
             }
         }
+
+        // release bmimgs[xx] memory(alloc memory in picDec)
+        for (int idx = 0; idx < config_tmp.batch_size; ++idx)
+        {
+            bm_image_destroy(bmimgs[idx]);
+        }
     }
 
     det_obj.deinit();
