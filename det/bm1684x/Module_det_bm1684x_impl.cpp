@@ -173,7 +173,7 @@ namespace bm1684x_det
     {
         std::vector<int> batch_index(batch_size);
         std::iota(batch_index.begin(), batch_index.end(), 0);
-        std::for_each(std::execution::par, batch_index.begin(), batch_index.end(),
+        std::for_each(std::execution::par_unseq, batch_index.begin(), batch_index.end(),
                       [&](int bs){
 #ifdef ALG_DEBUG
               printf("i = %d, I am Thread %d, total thread num : %d\n", i, omp_get_thread_num(), omp_get_num_threads());
@@ -303,7 +303,7 @@ namespace bm1684x_det
         const float* max_indexs = reinterpret_cast<const float *>(outputTensors[3]->get_cpu_data());
         std::vector<int> batch_index(batch_size);
         std::iota(batch_index.begin(), batch_index.end(), 0);
-        std::for_each(std::execution::par, batch_index.begin(), batch_index.end(),
+        std::for_each(std::execution::par_unseq, batch_index.begin(), batch_index.end(),
             [&](int bs){
             getTopKBoxesFromTopKFloatOutput(pred_bboxes + bs * (middle_dim * 4),
                                             max_indexs + bs * middle_dim,
