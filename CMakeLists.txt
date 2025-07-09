@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 project(BM1684X_det)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
@@ -71,7 +71,7 @@ set(SOPHON_SDK_INCLUDE_DIR
 set(SOPHON_SDK_LIB_DIR
         ${SOPHON_SDK_ROOT}/lib
 )
-set(BM_LIBS bmlib bmrt bmcv yuv avcodec avutil avformat)
+set(BM_LIBS bmlib bmrt bmcv yuv avcodec avutil avformat tbb)
 set(OPENCV_LIBS opencv_imgproc opencv_core opencv_highgui opencv_imgcodecs opencv_videoio)
 message("SOPHON_SDK: " ${SDK})
 aux_source_directory(${PROJECT_SOURCE_DIR}/../dependencies/src/ dependencies_SRC_FILES)

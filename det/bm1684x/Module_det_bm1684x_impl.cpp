@@ -2,6 +2,7 @@
 // Created by lizhaoliang-os on 2020/6/9.
 //
 #include <algorithm>
+#include <execution>
 #include <numeric>
 #include <iterator>
 #include <memory>
@@ -170,90 +171,90 @@ namespace bm1684x_det
 
     void CModule_det_bm1684x_impl::pre_process(const ImageInfoUint8 *imageInfos, int batch_size)
     {
-        #pragma omp parallel for // num_threads(batch_size)
-        for(int i = 0; i < batch_size; ++i)
-        {
+        std::vector<int> batch_index(batch_size);
+        std::iota(batch_index.begin(), batch_index.end(), 0);
+        std::for_each(std::execution::par, batch_index.begin(), batch_index.end(),
+                      [&](int bs){
 #ifdef ALG_DEBUG
-            printf("i = %d, I am Thread %d, total thread num : %d\n", i, omp_get_thread_num(), omp_get_num_threads());
+              printf("i = %d, I am Thread %d, total thread num : %d\n", i, omp_get_thread_num(), omp_get_num_threads());
 #endif
-            bm_image image_tmp;
-            convert_image_info_to_bm_image(&imageInfos[i], &image_tmp);
-            bm_image image_aligned;
-            bool need_copy = image_tmp.width & (64-1);
-            if(need_copy)
-            {
-                int stride1[3], stride2[3];
-                bm_image_get_stride(image_tmp, stride1);
-                stride2[0] = FFALIGN(stride1[0], 64);
-                stride2[1] = FFALIGN(stride1[1], 64);
-                stride2[2] = FFALIGN(stride1[2], 64);
-                bm_image_create(m_bmContext_->handle(), image_tmp.height, image_tmp.width,
-                                image_tmp.image_format, image_tmp.data_type, &image_aligned, stride2);
-                bm_image_alloc_dev_mem(image_aligned, BMCV_IMAGE_FOR_IN);
-                bmcv_copy_to_atrr_t copyToAttr;
-                memset(&copyToAttr, 0, sizeof(copyToAttr));
-                copyToAttr.start_x = 0;
-                copyToAttr.start_y = 0;
-                copyToAttr.if_padding = 1;
-                bmcv_image_copy_to(m_bmContext_->handle(), copyToAttr, image_tmp, image_aligned);
-            }
-            else
-            {
-                image_aligned = image_tmp;
-            }
+              bm_image image_tmp;
+              convert_image_info_to_bm_image(&imageInfos[bs], &image_tmp);
+              bm_image image_aligned;
+              bool need_copy = image_tmp.width & (64-1);
+              if(need_copy)
+              {
+                  int stride1[3], stride2[3];
+                  bm_image_get_stride(image_tmp, stride1);
+                  stride2[0] = FFALIGN(stride1[0], 64);
+                  stride2[1] = FFALIGN(stride1[1], 64);
+                  stride2[2] = FFALIGN(stride1[2], 64);
+                  bm_image_create(m_bmContext_->handle(), image_tmp.height, image_tmp.width,
+                                  image_tmp.image_format, image_tmp.data_type, &image_aligned, stride2);
+                  bm_image_alloc_dev_mem(image_aligned, BMCV_IMAGE_FOR_IN);
+                  bmcv_copy_to_atrr_t copyToAttr;
+                  memset(&copyToAttr, 0, sizeof(copyToAttr));
+                  copyToAttr.start_x = 0;
+                  copyToAttr.start_y = 0;
+                  copyToAttr.if_padding = 1;
+                  bmcv_image_copy_to(m_bmContext_->handle(), copyToAttr, image_tmp, image_aligned);
+              }
+              else
+              {
+                  image_aligned = image_tmp;
+              }
 #if USE_ASPECT_RATIO
-            bool isAlignWidth = false;
-            float ratio = get_aspect_scaled_ratio(image_tmp.width, image_tmp.height, m_net_w_, m_net_h_, &isAlignWidth);
-            bmcv_padding_atrr_t padding_attr;
-            //memset(&padding_attr, 0, sizeof(padding_attr));
-            padding_attr.dst_crop_sty = 0;
-            padding_attr.dst_crop_stx = 0;
-            padding_attr.padding_b = 114;
-            padding_attr.padding_g = 114;
-            padding_attr.padding_r = 114;
-            padding_attr.if_memset = 1;
-            if (isAlignWidth)
-            {
-                padding_attr.dst_crop_h = image_tmp.height*ratio;
-                padding_attr.dst_crop_w = m_net_w_;
+              bool isAlignWidth = false;
+              float ratio = get_aspect_scaled_ratio(image_tmp.width, image_tmp.height, m_net_w_, m_net_h_, &isAlignWidth);
+              bmcv_padding_atrr_t padding_attr;
+              //memset(&padding_attr, 0, sizeof(padding_attr));
+              padding_attr.dst_crop_sty = 0;
+              padding_attr.dst_crop_stx = 0;
+              padding_attr.padding_b = 114;
+              padding_attr.padding_g = 114;
+              padding_attr.padding_r = 114;
+              padding_attr.if_memset = 1;
+              if (isAlignWidth)
+              {
+                  padding_attr.dst_crop_h = image_tmp.height*ratio;
+                  padding_attr.dst_crop_w = m_net_w_;
 
 //                int ty1 = static_cast<int>((m_net_h_ - padding_attr.dst_crop_h) / 2);
 //                int ty1 = static_cast<int>(m_net_h_ - padding_attr.dst_crop_h);
 //                padding_attr.dst_crop_sty = 0;
 //                padding_attr.dst_crop_stx = 0;
-            }
-            else
-            {
-                padding_attr.dst_crop_h = m_net_h_;
-                padding_attr.dst_crop_w = image_tmp.width*ratio;
+              }
+              else
+              {
+                  padding_attr.dst_crop_h = m_net_h_;
+                  padding_attr.dst_crop_w = image_tmp.width*ratio;
 
 //                int tx1 = static_cast<int>((m_net_w_ - padding_attr.dst_crop_w) / 2);
 //                int tx1 = static_cast<int>(m_net_w_ - padding_attr.dst_crop_w);
 //                padding_attr.dst_crop_sty = 0;
 //                padding_attr.dst_crop_stx = tx1;
-            }
+              }
 
-            bmcv_rect_t crop_rect{0, 0, image_tmp.width, image_tmp.height};
-            auto ret = bmcv_image_vpp_convert_padding(m_bmContext_->handle(), 1, image_aligned, &m_resized_imgs_[i],
-                &padding_attr, &crop_rect, BMCV_INTER_NEAREST);
+              bmcv_rect_t crop_rect{0, 0, image_tmp.width, image_tmp.height};
+              auto ret = bmcv_image_vpp_convert_padding(m_bmContext_->handle(), 1, image_aligned, &m_resized_imgs_[bs],
+                                                        &padding_attr, &crop_rect, BMCV_INTER_NEAREST);
 #else
-            auto ret = bmcv_image_vpp_convert(m_bmContext_->handle(), 1, image_tmp, &m_resized_imgs_[i]);
+              auto ret = bmcv_image_vpp_convert(m_bmContext_->handle(), 1, image_tmp, &m_resized_imgs_[i]);
 #endif
-            assert(BM_SUCCESS == ret);
+              assert(BM_SUCCESS == ret);
 
 //ifdef ALG_DEBUG
 #if 0
-            cv::Mat resized_img;
-            cv::bmcv::toMAT(&m_resized_imgs_[i], resized_img);
-            std::string fname = cv::format("resized_img_%d.jpg", i);
-            cv::imwrite(fname, resized_img);
+                cv::Mat resized_img;
+                cv::bmcv::toMAT(&m_resized_imgs_[i], resized_img);
+                std::string fname = cv::format("resized_img_%d.jpg", i);
+                cv::imwrite(fname, resized_img);
 #endif
-            if(need_copy)
-            {
-                bm_image_destroy(image_aligned);
-            }
-        }
-
+              if(need_copy)
+              {
+                  bm_image_destroy(image_aligned);
+              }
+        });
         std::shared_ptr<BMNNTensor> input_tensor = m_bmNetwork_->inputTensor(0);
         //3. attach to tensor
         //assert(batch_size == m_max_batch_)
@@ -300,15 +301,16 @@ namespace bm1684x_det
         const float* topK_scores = reinterpret_cast<const float *>(outputTensors[1]->get_cpu_data());
         const float* topK_indexs = reinterpret_cast<const float *>(outputTensors[2]->get_cpu_data());
         const float* max_indexs = reinterpret_cast<const float *>(outputTensors[3]->get_cpu_data());
-        #pragma omp parallel for // num_threads(batch_size)
-        for (int bs = 0; bs < batch_size; ++bs)
-        {
+        std::vector<int> batch_index(batch_size);
+        std::iota(batch_index.begin(), batch_index.end(), 0);
+        std::for_each(std::execution::par, batch_index.begin(), batch_index.end(),
+            [&](int bs){
             getTopKBoxesFromTopKFloatOutput(pred_bboxes + bs * (middle_dim * 4),
                                             max_indexs + bs * middle_dim,
                                         topK_indexs + bs * topK_,
                                         topK_scores + bs * topK_,
                                         middle_dim, topK_, topK_boxes_scores_labels_.data() + bs * topK_ * 6);
-        }
+        });
 #ifdef ALG_DEBUG
         std::chrono::time_point<std::chrono::system_clock> begin_time_nms = std::chrono::system_clock::now();
         AIALG_PRINT("Postprocess0 time %ld ms\n", std::chrono::duration_cast<std::chrono::milliseconds>(begin_time_nms - end_time).count());
