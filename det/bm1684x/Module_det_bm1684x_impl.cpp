@@ -175,9 +175,6 @@ namespace bm1684x_det
         std::iota(batch_index.begin(), batch_index.end(), 0);
         std::for_each(std::execution::par_unseq, batch_index.begin(), batch_index.end(),
                       [&](int bs){
-#ifdef ALG_DEBUG
-              printf("i = %d, I am Thread %d, total thread num : %d\n", i, omp_get_thread_num(), omp_get_num_threads());
-#endif
               bm_image image_tmp;
               convert_image_info_to_bm_image(&imageInfos[bs], &image_tmp);
               bm_image image_aligned;
@@ -236,9 +233,17 @@ namespace bm1684x_det
               }
 
               bmcv_rect_t crop_rect{0, 0, image_tmp.width, image_tmp.height};
+#ifdef ALG_DEBUG
+              std::chrono::time_point<std::chrono::system_clock> begin_time_nms = std::chrono::system_clock::now();
+#endif
               auto ret = bmcv_image_vpp_convert_padding(m_bmContext_->handle(), 1, image_aligned, &m_resized_imgs_[bs],
                                                         &padding_attr, &crop_rect, BMCV_INTER_NEAREST);
-#else
+#ifdef ALG_DEBUG
+              std::chrono::time_point<std::chrono::system_clock> end_time_nms = std::chrono::system_clock::now();
+              AIALG_PRINT("bmcv_image_vpp_convert_padding time %d ms\n", static_cast<int>(std::chrono::duration_cast<std::chrono::milliseconds>(end_time_nms - begin_time_nms).count()));
+#endif
+
+#else // USE_ASPECT_RATIO
               auto ret = bmcv_image_vpp_convert(m_bmContext_->handle(), 1, image_tmp, &m_resized_imgs_[i]);
 #endif
               assert(BM_SUCCESS == ret);
@@ -303,7 +308,8 @@ namespace bm1684x_det
         const float* max_indexs = reinterpret_cast<const float *>(outputTensors[3]->get_cpu_data());
         std::vector<int> batch_index(batch_size);
         std::iota(batch_index.begin(), batch_index.end(), 0);
-        std::for_each(std::execution::par_unseq, batch_index.begin(), batch_index.end(),
+        // 这里的for_each用seq和par或par_unseq速度差不多
+        std::for_each(std::execution::seq, batch_index.begin(), batch_index.end(),
             [&](int bs){
             getTopKBoxesFromTopKFloatOutput(pred_bboxes + bs * (middle_dim * 4),
                                             max_indexs + bs * middle_dim,
