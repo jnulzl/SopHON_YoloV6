@@ -34,15 +34,5 @@
                 "CMAKE_C_COMPILER": "/usr/bin/aarch64-linux-gnu-gcc"
             }
         }
-    ],
-    "buildPresets": [
-        {
-            "name": "build-Release_bm1684_Linux",
-            "configurePreset": "Release_bm1684_Linux"
-        },
-        {
-            "name": "build-Release_bm1684_Debug",
-            "configurePreset": "Release_bm1684_Debug"
-        }
     ]
 }
