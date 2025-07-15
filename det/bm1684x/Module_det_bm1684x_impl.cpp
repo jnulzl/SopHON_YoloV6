@@ -144,7 +144,7 @@ namespace bm1684x_det
 
         //3. get output
         m_output_num_ = m_bmNetwork_->outputTensorNum();
-        assert(output_num == 1 || output_num == 2 || output_num == 3 || output_num == 4);
+        assert(m_output_num_ == 1 || m_output_num_ == 2 || m_output_num_ == 3 || m_output_num_ == 4);
 
         //4. initialize bmimages
         m_resized_imgs_.resize(m_max_batch_);

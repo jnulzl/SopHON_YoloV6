@@ -1,0 +1,48 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 19,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "Release_bm1684_Linux",
+            "displayName": "BM1684 Release for Linux",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_STANDARD": "17",
+                "ENGINE_LOWER": "bm1684x",
+                "CMAKE_SYSTEM_NAME": "Linux",                
+                "CMAKE_CXX_COMPILER": "/usr/bin/aarch64-linux-gnu-g++",
+                "CMAKE_C_COMPILER": "/usr/bin/aarch64-linux-gnu-gcc"
+            }
+        },
+        {
+            "name": "Release_bm1684_Debug",
+            "displayName": "BM1684 Debug for Linux",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_CXX_STANDARD": "17",
+                "ENGINE_LOWER": "bm1684x",
+                "CMAKE_SYSTEM_NAME": "Linux",                
+                "CMAKE_CXX_COMPILER": "/usr/bin/aarch64-linux-gnu-g++",
+                "CMAKE_C_COMPILER": "/usr/bin/aarch64-linux-gnu-gcc"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "build-Release_bm1684_Linux",
+            "configurePreset": "Release_bm1684_Linux"
+        },
+        {
+            "name": "build-Release_bm1684_Debug",
+            "configurePreset": "Release_bm1684_Debug"
+        }
+    ]
+}
