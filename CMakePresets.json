@@ -8,7 +8,7 @@
     "configurePresets": [
         {
             "name": "Release_bm1684_Linux",
-            "displayName": "BM1684 Release for Linux",
+            "displayName": "Release_bm1684_Linux",
             "generator": "Unix Makefiles",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "cacheVariables": {
@@ -22,16 +22,9 @@
         },
         {
             "name": "Release_bm1684_Debug",
-            "displayName": "BM1684 Debug for Linux",
-            "generator": "Unix Makefiles",
-            "binaryDir": "${sourceDir}/build/${presetName}",
+            "inherits": "Release_bm1684_Linux",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_CXX_STANDARD": "17",
-                "ENGINE_LOWER": "bm1684x",
-                "CMAKE_SYSTEM_NAME": "Linux",                
-                "CMAKE_CXX_COMPILER": "/usr/bin/aarch64-linux-gnu-g++",
-                "CMAKE_C_COMPILER": "/usr/bin/aarch64-linux-gnu-gcc"
+                "CMAKE_BUILD_TYPE": "Debug"
             }
         }
     ]
